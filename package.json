@@ -1,0 +1,28 @@
+{
+  "dependencies": {
+    "@create-figma-plugin/ui": "^2.1.3",
+    "@create-figma-plugin/utilities": "^2.1.3",
+    "preact": "^10"
+  },
+  "devDependencies": {
+    "@create-figma-plugin/build": "^2.1.3",
+    "@create-figma-plugin/tsconfig": "^2.1.3",
+    "@figma/plugin-typings": "1.50.0",
+    "@figma/widget-typings": "1.5.0",
+    "typescript": "^4"
+  },
+  "scripts": {
+    "build": "build-figma-plugin --typecheck --minify",
+    "watch": "build-figma-plugin --typecheck --watch"
+  },
+  "figma-plugin": {
+    "editorType": [
+      "figma"
+    ],
+    "containsWidget": true,
+    "id": "lightbulb",
+    "name": "Lightbulb",
+    "main": "src/main.tsx",
+    "ui": "src/ui.tsx"
+  }
+}
