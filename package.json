@@ -21,8 +21,12 @@
     ],
     "containsWidget": true,
     "id": "lightbulb",
-    "name": "Lightbulb",
+    "name": " ",
     "main": "src/main.tsx",
-    "ui": "src/ui.tsx"
+    "ui": "src/ui.tsx",
+    "permissions": [
+      "currentuser"
+    ],
+    "enablePrivatePluginApi": true
   }
 }
