@@ -160,18 +160,44 @@ function Lightbulb() {
     };
   });
 
-  // usePropertyMenu(
-  //   [
-  //     {
-  //       itemType: "action",
-  //       tooltip: "Toggle name",
-  //       propertyName: "toggleName",
-  //     },
-  //   ],
-  //   () => {
-  //     setShowName(!showName);
-  //   }
-  // );
+  async function onChange({
+    propertyName,
+  }: WidgetPropertyEvent): Promise<void> {
+    await new Promise<void>(function (resolve: () => void): void {
+      if (propertyName === "showArchived") {
+        showUI({ height: 144, width: 240 }, { "show Archive": String });
+        // once("UPDATE_TEXT", function (text: string): void {
+        //   setText(text);
+        //   resolve();
+        // });
+      }
+    });
+  }
+
+  usePropertyMenu(
+    [
+      {
+        itemType: "action",
+        tooltip: "Show archived",
+        propertyName: "showArchived",
+      },
+    ],
+    onChange
+  );
+
+  async function onDelete({
+    propertyName,
+  }: WidgetPropertyEvent): Promise<void> {
+    await new Promise<void>(function (resolve: () => void): void {
+      if (propertyName === "showArchived") {
+        showUI({ height: 144, width: 240 }, { " ": String });
+        // once("UPDATE_TEXT", function (text: string): void {
+        //   setText(text);
+        //   resolve();
+        // });
+      }
+    });
+  }
 
   return (
     <AutoLayout
@@ -251,6 +277,7 @@ function Lightbulb() {
             >
               <SVG
                 src={editIcon}
+                tooltip={"edit"}
                 onClick={() => {
                   setEditMode(!editMode);
                   console.log("click on edit, current edit mode is ", editMode);
@@ -258,12 +285,14 @@ function Lightbulb() {
               ></SVG>
               <SVG
                 src={archive}
+                tooltip={"archive"}
                 onClick={() => {
                   console.log("click on archive");
                 }}
               ></SVG>
               <SVG
                 src={link}
+                tooltip={"copy link"}
                 onClick={() => {
                   const widget_link = `https://www.figma.com/file/${fileKey}?node-id=${widgetId}`;
                   console.log("click on link ", widget_link);
@@ -360,7 +389,7 @@ function Lightbulb() {
                 placeholder={`Your design rationale here...`}
                 value={text}
                 width={270}
-                inputBehavior="multiline"
+                // inputBehavior="multiline"
                 paragraphSpacing={5}
               />
             ) : (
@@ -383,6 +412,7 @@ function Lightbulb() {
                 src={addlink}
                 onClick={() => {
                   console.log("add link");
+                  onDelete;
                 }}
               ></SVG>
             </AutoLayout>
