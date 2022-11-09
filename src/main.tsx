@@ -1,6 +1,8 @@
 /** @jsx figma.widget.h */
 
-import { once, showUI } from "@create-figma-plugin/utilities";
+import { emit, once, showUI } from "@create-figma-plugin/utilities";
+import { RationaleObject } from "./ui";
+import { useCallback, useState } from "preact/hooks";
 
 const { widget } = figma;
 const {
@@ -19,6 +21,15 @@ const {
 export default function () {
   widget.register(Lightbulb);
 }
+
+const questions: { [category: string]: string } = {
+  "Design Rationale": "Why is this designed this way?",
+  Function: "What is the function of this?",
+  Behavior: "How does this behave?",
+  "Additional Context": "What else is important for this?",
+  Task: "What needs to be done to this?",
+  Problems: "What is wrong with this?",
+};
 
 // function Lightbulb() {
 //   const [text, setText] = useSyncedState("text", "Hello\nWidgets");
@@ -99,13 +110,19 @@ function Lightbulb() {
     "photoUrl",
     null
   );
-  const [text, setText] = useSyncedState("text", "");
+  const [text, setText] = useSyncedState<string>("text", "");
   const [open, setOpen] = useSyncedState("open", true);
   const [full, setFull] = useSyncedState("full", false);
   const [editMode, setEditMode] = useSyncedState("editMode", false);
-  const [type, setType] = useSyncedState("type", "Design Rationale");
+  const [type, setType] = useSyncedState<string>("type", "Category 1");
   const [selectOn, setSelectOn] = useSyncedState("selectOn", false);
   const [date, setDate] = useSyncedState("date", createTime());
+
+  const [mode, setMode] = useSyncedState<string>("Questions", "");
+
+  // const [archivedObjects, setArchivedObjects] = useSyncedState<
+  //   RationaleObject[]
+  // >("archivedObjects", []);
 
   const color = "#FCF782";
   const bulbSvgSrc = `<svg style="color: #f3da35" width="50" height="50" stroke-width="1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M21 2L20 3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M3 2L4 3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M21 16L20 15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M3 16L4 15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M9 18H15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M10 21H14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M11.9998 3C7.9997 3 5.95186 4.95029 5.99985 8C6.02324 9.48689 6.4997 10.5 7.49985 11.5C8.5 12.5 9 13 8.99985 15H14.9998C15 13.0001 15.5 12.5 16.4997 11.5001L16.4998 11.5C17.4997 10.5 17.9765 9.48689 17.9998 8C18.0478 4.95029 16 3 11.9998 3Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> </svg>`;
@@ -134,6 +151,10 @@ function Lightbulb() {
 <circle cx="7" cy="7" r="7" fill="white"/>
 <path d="M6.94602 9.49574V5H7.55327V9.49574H6.94602ZM5 7.54972V6.94602H9.49929V7.54972H5Z" fill="#191919"/>
 </svg>`;
+  const expand = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="5" cy="5" r="4.5" fill="#FDB827" stroke="#27251F"/>
+<path d="M4.96155 6.78265V3.57141H5.3953V6.78265H4.96155ZM3.57153 5.39264V4.96143H6.78531V5.39264H3.57153Z" fill="#27251F"/>
+</svg>`;
 
   const widgetId = useWidgetId();
   const fileKey = figma.fileKey;
@@ -160,12 +181,34 @@ function Lightbulb() {
     };
   });
 
+  const handleArchived = (archivedObject: RationaleObject) => {
+    let archivedObjects: RationaleObject[] =
+      figma.currentPage.getPluginData("archivedObjects") === ""
+        ? []
+        : JSON.parse(figma.currentPage.getPluginData("archivedObjects"));
+    archivedObjects.push(archivedObject);
+    figma.currentPage.setPluginData(
+      "archivedObjects",
+      JSON.stringify(archivedObjects)
+    );
+    // emit("ARCHIVE", rationaleObject);
+  };
+
   async function onChange({
     propertyName,
   }: WidgetPropertyEvent): Promise<void> {
     await new Promise<void>(function (resolve: () => void): void {
       if (propertyName === "showArchived") {
-        showUI({ height: 144, width: 240 }, { "show Archive": String });
+        showUI(
+          { height: 1200, width: 300, position: { x: 0, y: 0 } },
+          { "show Archive": String }
+        );
+        let archivedObjects: RationaleObject[] =
+          figma.currentPage.getPluginData("archivedObjects") === ""
+            ? []
+            : JSON.parse(figma.currentPage.getPluginData("archivedObjects"));
+        emit("TEST", "test from showUI");
+        emit("ARCHIVE", archivedObjects);
         // once("UPDATE_TEXT", function (text: string): void {
         //   setText(text);
         //   resolve();
@@ -208,6 +251,70 @@ function Lightbulb() {
       overflow="visible"
     >
       <SVG src={bulbSvgSrc} onClick={() => setOpen(!open)} />
+
+      <AutoLayout
+        direction="vertical"
+        verticalAlignItems="start"
+        height="hug-contents"
+        spacing={6}
+        padding={12}
+        cornerRadius={8}
+        width={200}
+        fill="#FFF"
+        stroke="#000"
+        hidden={!open}
+      >
+        {/* tabs */}
+        <AutoLayout
+          direction="horizontal"
+          horizontalAlignItems="center"
+          verticalAlignItems="center"
+          height="hug-contents"
+          padding={{ top: 5, left: 8, bottom: 0, right: 8 }}
+          spacing={12}
+        >
+          <Text
+            fontFamily="Roboto"
+            fontSize={12}
+            fontWeight={600}
+            onClick={() => setMode("Questions")}
+            fill={mode == "Questions" ? "#0B339A" : "#000000"}
+            textDecoration={mode == "Questions" ? "underline" : "none"}
+          >
+            Questions
+          </Text>
+          <Text
+            fontFamily="Roboto"
+            fontSize={12}
+            fontWeight={600}
+            onClick={() => setMode("Categories")}
+            fill={mode == "Categories" ? "#0B339A" : "#000000"}
+            textDecoration={mode == "Categories" ? "underline" : "none"}
+          >
+            Categories
+          </Text>
+        </AutoLayout>
+
+        {/* question/categories list */}
+        <AutoLayout
+          direction="vertical"
+          verticalAlignItems="start"
+          height="hug-contents"
+          spacing={10}
+          padding={12}
+          cornerRadius={8}
+        >
+          {Object.entries(questions).map(([category, question]) => (
+            <AutoLayout direction="horizontal" spacing={6}>
+              <SVG src={expand}></SVG>
+              <Text fontFamily="Roboto" fontSize={10}>
+                {mode == "Questions" ? question : category}
+              </Text>
+            </AutoLayout>
+          ))}
+        </AutoLayout>
+      </AutoLayout>
+
       {full ? (
         <AutoLayout
           direction="vertical"
@@ -288,6 +395,12 @@ function Lightbulb() {
                 tooltip={"archive"}
                 onClick={() => {
                   console.log("click on archive");
+                  handleArchived({
+                    name: name,
+                    description: text,
+                    date: date,
+                    type: type,
+                  });
                 }}
               ></SVG>
               <SVG
@@ -324,34 +437,34 @@ function Lightbulb() {
                     fontFamily="Inter"
                     fontSize={12}
                     onClick={() => {
-                      setType("Design Rationale");
+                      setType("Category 1");
                       setSelectOn(false);
                       setDate(createTime());
                     }}
                   >
-                    Design Rationale
+                    Category 1
                   </Text>
                   <Text
                     fontFamily="Inter"
                     fontSize={12}
                     onClick={() => {
-                      setType("Option 2");
+                      setType("Category 2");
                       setSelectOn(false);
                       setDate(createTime());
                     }}
                   >
-                    Option 2
+                    Category 2
                   </Text>
                   <Text
                     fontFamily="Inter"
                     fontSize={12}
                     onClick={() => {
-                      setType("Option 3");
+                      setType("Category 3");
                       setSelectOn(false);
                       setDate(createTime());
                     }}
                   >
-                    Option 3
+                    Category 3
                   </Text>
                 </AutoLayout>
                 <SVG src={dropdown} onClick={() => setSelectOn(false)}></SVG>

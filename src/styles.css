@@ -1,0 +1,12 @@
+.container {
+  /* width: 200px; */
+  height: 800px;
+}
+
+.archived {
+  border: 1px solid gray;
+  border-radius: 5px;
+  padding: 5px;
+  margin: 5px;
+  width: 100%;
+}
