@@ -374,9 +374,12 @@ function Lightbulb() {
                           verticalAlignItems: "center",
                         }}
                         onTextEditEnd={(e) => {
+                          let text = e.characters.trim();
+                          console.log("text length ", text.length);
                           updateAnswers(answer.category, {
-                            answer: e.characters.trim(),
-                            answered: true,
+                            answer: text,
+                            answered: text.length ? true : false,
+                            expanded: text.length ? true : false,
                           });
                           setDate(createTime());
                         }}
@@ -500,9 +503,12 @@ function Lightbulb() {
                           verticalAlignItems: "center",
                         }}
                         onTextEditEnd={(e) => {
+                          let text = e.characters.trim();
+                          console.log("text length ", text.length);
                           updateAnswers(answer.category, {
-                            answer: e.characters.trim(),
-                            answered: true,
+                            answer: text,
+                            answered: text.length ? true : false,
+                            expanded: text.length ? true : false,
                           });
                           setDate(createTime());
                         }}
@@ -514,7 +520,11 @@ function Lightbulb() {
                   </AutoLayout>
                 ))}
               {/* unanswered part */}
-              <AutoLayout direction="vertical" spacing={6}>
+              <AutoLayout
+                direction="vertical"
+                spacing={6}
+                hidden={answers.filter((a) => a.answered).length == 0}
+              >
                 {/* unanswered title */}
                 <AutoLayout direction="horizontal" spacing={6}>
                   <SVG
