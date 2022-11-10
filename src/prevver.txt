@@ -1,0 +1,269 @@
+{
+  full ? (
+    <AutoLayout
+      direction="vertical"
+      verticalAlignItems="start"
+      height="hug-contents"
+      padding={4}
+      fill="#FCF782"
+      cornerRadius={8}
+      spacing={6}
+      hidden={!open}
+    >
+      {/* header */}
+      <AutoLayout
+        direction="horizontal"
+        horizontalAlignItems="center"
+        verticalAlignItems="center"
+        height="hug-contents"
+        padding={{ top: 5, left: 8, bottom: 0, right: 8 }}
+        spacing={12}
+      >
+        <AutoLayout
+          direction="horizontal"
+          horizontalAlignItems="center"
+          verticalAlignItems="center"
+          height="hug-contents"
+          padding={5}
+          spacing={8}
+        >
+          {photoUrl ? (
+            <Image cornerRadius={24} width={24} height={24} src={photoUrl} />
+          ) : (
+            <Rectangle
+              cornerRadius={24}
+              width={24}
+              height={24}
+              fill="#2A2A2A"
+            />
+          )}
+
+          <Text fontFamily="Inter" fontSize={14} fontWeight={600}>
+            {name}
+          </Text>
+          <Text fontFamily="Inter" fontSize={12} fill="#818181">
+            {date}
+          </Text>
+        </AutoLayout>
+
+        <AutoLayout
+          direction="horizontal"
+          horizontalAlignItems="center"
+          verticalAlignItems="center"
+          height="hug-contents"
+          padding={5}
+          spacing={8}
+        >
+          {/* <SVG
+            src={edit}
+            tooltip={"edit"}
+            onClick={() => {
+              setEditMode(!editMode);
+              console.log("click on edit, current edit mode is ", editMode);
+            }}
+          ></SVG> */}
+          {/* <SVG
+            src={archive}
+            tooltip={"archive"}
+            onClick={() => {
+              console.log("click on archive");
+              handleArchived({
+                name: name,
+                description: text,
+                date: date,
+                type: type,
+              });
+            }}
+          ></SVG> */}
+          {/* <SVG
+            src={link}
+            tooltip={"copy link"}
+            onClick={() => {
+              const widget_link = `https://www.figma.com/file/${fileKey}?node-id=${widgetId}`;
+              console.log("click on link ", widget_link);
+            }}
+          ></SVG> */}
+          {/* <SVG
+            src={cross}
+            onClick={() => {
+              setFull(false);
+              console.log("click on cross, current full is ", full);
+              setEditMode(false);
+            }}
+          ></SVG> */}
+        </AutoLayout>
+      </AutoLayout>
+
+      {/* body */}
+      <AutoLayout
+        direction="vertical"
+        height="hug-contents"
+        padding={{ vertical: 0, horizontal: 20 }}
+        spacing={5}
+      >
+        {/* dropdown menu */}
+        {selectOn ? (
+          <AutoLayout direction="horizontal" verticalAlignItems="start">
+            <AutoLayout direction="vertical">
+              <Text
+                fontFamily="Inter"
+                fontSize={12}
+                onClick={() => {
+                  setType("Category 1");
+                  setSelectOn(false);
+                  setDate(createTime());
+                }}
+              >
+                Category 1
+              </Text>
+              <Text
+                fontFamily="Inter"
+                fontSize={12}
+                onClick={() => {
+                  setType("Category 2");
+                  setSelectOn(false);
+                  setDate(createTime());
+                }}
+              >
+                Category 2
+              </Text>
+              <Text
+                fontFamily="Inter"
+                fontSize={12}
+                onClick={() => {
+                  setType("Category 3");
+                  setSelectOn(false);
+                  setDate(createTime());
+                }}
+              >
+                Category 3
+              </Text>
+            </AutoLayout>
+            {/* <SVG src={dropdown} onClick={() => setSelectOn(false)}></SVG> */}
+          </AutoLayout>
+        ) : (
+          <AutoLayout direction="horizontal" verticalAlignItems="center">
+            <Text fontFamily="Inter" fontSize={12}>
+              {type}
+            </Text>
+            {/* <SVG src={dropdown} onClick={() => setSelectOn(true)}></SVG> */}
+          </AutoLayout>
+        )}
+
+        {/* text edit */}
+        {editMode ? (
+          <Input
+            fontFamily="Inter"
+            fontSize={12}
+            fontWeight="normal"
+            inputFrameProps={{
+              cornerRadius: 10,
+              fill: "#FFF",
+              horizontalAlignItems: "center",
+              overflow: "visible",
+              padding: 10,
+              stroke: color,
+              strokeWidth: 1,
+              verticalAlignItems: "center",
+            }}
+            onTextEditEnd={(e) => {
+              setEditMode(false);
+              setText(e.characters.trim());
+              setDate(createTime());
+            }}
+            placeholder={`Your design rationale here...`}
+            value={text}
+            width={270}
+            // inputBehavior="multiline"
+            paragraphSpacing={5}
+          />
+        ) : (
+          <AutoLayout padding={{ vertical: 2, horizontal: 5 }}>
+            <Text
+              fontFamily="Inter"
+              fontSize={12}
+              fontWeight={500}
+              paragraphSpacing={5}
+              width={270}
+            >
+              {text}
+            </Text>
+          </AutoLayout>
+        )}
+
+        {/* add link */}
+        <AutoLayout>
+          {/* <SVG
+            src={addlink}
+            onClick={() => {
+              console.log("add link");
+              onDelete;
+            }}
+          ></SVG> */}
+        </AutoLayout>
+      </AutoLayout>
+    </AutoLayout>
+  ) : (
+    <AutoLayout
+      direction="vertical"
+      verticalAlignItems="start"
+      height="hug-contents"
+      padding={4}
+      fill={{ r: 0, g: 0, b: 0, a: 0 }}
+      spacing={6}
+      hidden={!open}
+    >
+      {/* header */}
+      <AutoLayout
+        direction="horizontal"
+        horizontalAlignItems="center"
+        verticalAlignItems="center"
+        height="hug-contents"
+        padding={{ top: 5, left: 8, bottom: 0, right: 8 }}
+        spacing={12}
+      >
+        <AutoLayout
+          direction="horizontal"
+          horizontalAlignItems="center"
+          verticalAlignItems="center"
+          height="hug-contents"
+          padding={5}
+          spacing={8}
+        >
+          <Text fontFamily="Inter" fontSize={12}>
+            {type}
+          </Text>
+        </AutoLayout>
+
+        <AutoLayout
+          direction="horizontal"
+          horizontalAlignItems="center"
+          verticalAlignItems="center"
+          height="hug-contents"
+          padding={5}
+          spacing={8}
+        >
+          {/* <SVG
+            src={threedots}
+            onClick={() => {
+              setFull(true);
+              console.log("click on three dots, current full is ", full);
+            }}
+          ></SVG> */}
+        </AutoLayout>
+      </AutoLayout>
+
+      <AutoLayout padding={12} cornerRadius={8} fill="#FFF">
+        <Text
+          fontFamily="Inter"
+          fontSize={12}
+          fontWeight={500}
+          paragraphSpacing={5}
+          width={270}
+        >
+          {text}
+        </Text>
+      </AutoLayout>
+    </AutoLayout>
+  );
+}

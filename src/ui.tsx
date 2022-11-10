@@ -22,6 +22,15 @@ export interface RationaleObject {
   type: string;
 }
 
+export interface Answer {
+  name: string;
+  photo: string;
+  date: string;
+  answer: string;
+  // assignee: string;
+  // evidence: { text: string; link: string };
+}
+
 function Plugin(props: { text: string }) {
   const [text, setText] = useState(props.text);
   const [archivedObjects, setArchivedObjects] = useState<RationaleObject[]>(
