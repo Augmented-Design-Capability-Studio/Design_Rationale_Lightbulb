@@ -72,7 +72,7 @@ function createTime() {
   const month = date.getMonth() + 1;
   const year = date.getFullYear();
   const currentDate = `${day}-${month}-${year}`;
-  console.log(currentDate);
+  // console.log(currentDate);
   return currentDate;
 }
 
@@ -117,7 +117,7 @@ function Lightbulb() {
   ); // stores all answers, initial value = {}
   const [unanswerExpand, setUnanswerExpand] = useSyncedState<boolean>(
     "unanswerExpand",
-    false
+    true
   );
 
   // const [archivedObjects, setArchivedObjects] = useSyncedState<
@@ -284,284 +284,136 @@ function Lightbulb() {
           padding={12}
           cornerRadius={8}
         >
-          {(Array.isArray(answers) ? answers.filter((a) => a.answered) : [])
-            .length == 0 ? (
-            // when there is no answer
-            answers.filter((a) => a.expanded).length == 0 ? (
-              // and no category expanded
-              answers.map((answer) => (
+          {/* when there are answers */}
+          <AutoLayout direction="vertical" spacing={6}>
+            {/* answered part */}
+            {answers
+              .filter((a) => a.answered || a.expanded)
+              .map((answer) => (
                 <AutoLayout direction="vertical" spacing={6}>
+                  {/* profile */}
+                  <AutoLayout
+                    direction="horizontal"
+                    horizontalAlignItems="center"
+                    verticalAlignItems="center"
+                    height="hug-contents"
+                    padding={0}
+                    spacing={8}
+                  >
+                    {photoUrl ? (
+                      <Image
+                        cornerRadius={18}
+                        width={18}
+                        height={18}
+                        src={photoUrl}
+                      />
+                    ) : (
+                      <Rectangle
+                        cornerRadius={18}
+                        width={18}
+                        height={18}
+                        fill="#2A2A2A"
+                      />
+                    )}
+                    <Text fontFamily="Inter" fontSize={10} fontWeight={400}>
+                      {name}
+                    </Text>
+                    <Text fontFamily="Inter" fontSize={10} fill="#818181">
+                      {date}
+                    </Text>
+                  </AutoLayout>
+                  {/* expanded question/category */}
                   <AutoLayout direction="horizontal" spacing={6}>
                     <SVG
-                      src={expand}
-                      onClick={() => {
-                        updateAnswers(answer.category, { expanded: true });
-                      }}
+                      src={answer.expanded ? expanded : toexpand}
+                      onClick={() =>
+                        updateAnswers(answer.category, {
+                          expanded: !answer.expanded,
+                        })
+                      }
                     ></SVG>
                     <Text fontFamily="Roboto" fontSize={10}>
                       {mode == "Questions" ? answer.question : answer.category}
                     </Text>
                   </AutoLayout>
+                  {/* text/input */}
+                  {answer.expanded ? (
+                    <Input
+                      fontFamily="Inter"
+                      fontSize={10}
+                      fontWeight="normal"
+                      inputFrameProps={{
+                        cornerRadius: 2,
+                        fill: "#FFF",
+                        horizontalAlignItems: "center",
+                        overflow: "visible",
+                        padding: 2,
+                        stroke: "#ABABAB",
+                        strokeWidth: 1,
+                        verticalAlignItems: "center",
+                      }}
+                      onTextEditEnd={(e) => {
+                        let text = e.characters.trim();
+                        console.log("text length ", text.length);
+                        updateAnswers(answer.category, {
+                          answer: text,
+                          answered: text.length ? true : false,
+                          expanded: text.length ? true : false,
+                        });
+                        setDate(createTime());
+                      }}
+                      value={answer.answer}
+                      width={150}
+                      paragraphSpacing={5}
+                    />
+                  ) : null}
                 </AutoLayout>
-              ))
-            ) : (
-              // when there is category expanded
-              <AutoLayout direction="vertical" spacing={8}>
-                {/* the expanded question */}
-                {answers
-                  .filter((a) => a.expanded)
-                  .map((answer) => (
-                    <AutoLayout direction="vertical" spacing={6}>
-                      {/* profile */}
-                      <AutoLayout
-                        direction="horizontal"
-                        horizontalAlignItems="center"
-                        verticalAlignItems="center"
-                        height="hug-contents"
-                        padding={0}
-                        spacing={8}
-                      >
-                        {photoUrl ? (
-                          <Image
-                            cornerRadius={18}
-                            width={18}
-                            height={18}
-                            src={photoUrl}
-                          />
-                        ) : (
-                          <Rectangle
-                            cornerRadius={18}
-                            width={18}
-                            height={18}
-                            fill="#2A2A2A"
-                          />
-                        )}
-                        <Text fontFamily="Inter" fontSize={10} fontWeight={400}>
-                          {name}
-                        </Text>
-                        <Text fontFamily="Inter" fontSize={10} fill="#818181">
-                          {date}
-                        </Text>
-                      </AutoLayout>
-                      {/* expanded question/category */}
-                      <AutoLayout direction="horizontal" spacing={6}>
-                        <SVG
-                          src={answer.expanded ? expanded : toexpand}
-                          onClick={() =>
-                            updateAnswers(answer.category, {
-                              expanded: !answer.expanded,
-                            })
-                          }
-                        ></SVG>
-                        <Text fontFamily="Roboto" fontSize={10}>
-                          {mode == "Questions"
-                            ? answer.question
-                            : answer.category}
-                        </Text>
-                      </AutoLayout>
-                      {/* text/input */}
-                      <Input
-                        fontFamily="Roboto"
-                        fontSize={10}
-                        inputFrameProps={{
-                          cornerRadius: 2,
-                          fill: "#FFF",
-                          horizontalAlignItems: "center",
-                          overflow: "visible",
-                          padding: 2,
-                          stroke: "#ABABAB",
-                          strokeWidth: 1,
-                          verticalAlignItems: "center",
-                        }}
-                        onTextEditEnd={(e) => {
-                          let text = e.characters.trim();
-                          console.log("text length ", text.length);
-                          updateAnswers(answer.category, {
-                            answer: text,
-                            answered: text.length ? true : false,
-                            expanded: text.length ? true : false,
-                          });
-                          setDate(createTime());
-                        }}
-                        value={answer.answer}
-                        width={150}
-                        paragraphSpacing={5}
-                        hidden={answer.expanded}
-                      />
-                    </AutoLayout>
-                  ))}
-                {/* unanswered part */}
-                <AutoLayout direction="vertical" spacing={6}>
-                  {/* unanswered title */}
-                  <AutoLayout direction="horizontal" spacing={6}>
-                    <SVG
-                      src={unanswerExpand ? expanded : toexpand}
-                      onClick={() => setUnanswerExpand(!unanswerExpand)}
-                    ></SVG>
-                    <Text fontFamily="Roboto" fontSize={10}>
-                      Unanswered Questions
-                    </Text>
-                  </AutoLayout>
-                  {/* unanswered questions */}
-                  {unanswerExpand ? (
-                    answers
-                      .filter((a) => !a.answered && !a.expanded)
-                      .map((answer) => (
-                        <AutoLayout direction="vertical" spacing={6}>
-                          <AutoLayout direction="horizontal" spacing={6}>
-                            <SVG
-                              src={expand}
-                              onClick={() => {
-                                updateAnswers(answer.category, {
-                                  expanded: true,
-                                });
-                              }}
-                            ></SVG>
-                            <Text fontFamily="Roboto" fontSize={10}>
-                              {mode == "Questions"
-                                ? answer.question
-                                : answer.category}
-                            </Text>
-                          </AutoLayout>
-                        </AutoLayout>
-                      ))
-                  ) : (
-                    <AutoLayout></AutoLayout>
-                  )}
-                </AutoLayout>
-              </AutoLayout>
-            )
-          ) : (
-            // when there are answers
+              ))}
+            {/* unanswered part */}
             <AutoLayout direction="vertical" spacing={6}>
-              {/* answered part */}
-              {answers
-                .filter((a) => a.answered || a.expanded)
-                .map((answer) => (
-                  <AutoLayout direction="vertical" spacing={6}>
-                    {/* profile */}
-                    <AutoLayout
-                      direction="horizontal"
-                      horizontalAlignItems="center"
-                      verticalAlignItems="center"
-                      height="hug-contents"
-                      padding={0}
-                      spacing={8}
-                    >
-                      {photoUrl ? (
-                        <Image
-                          cornerRadius={18}
-                          width={18}
-                          height={18}
-                          src={photoUrl}
-                        />
-                      ) : (
-                        <Rectangle
-                          cornerRadius={18}
-                          width={18}
-                          height={18}
-                          fill="#2A2A2A"
-                        />
-                      )}
-                      <Text fontFamily="Inter" fontSize={10} fontWeight={400}>
-                        {name}
-                      </Text>
-                      <Text fontFamily="Inter" fontSize={10} fill="#818181">
-                        {date}
-                      </Text>
-                    </AutoLayout>
-                    {/* expanded question/category */}
-                    <AutoLayout direction="horizontal" spacing={6}>
-                      <SVG
-                        src={answer.expanded ? expanded : toexpand}
-                        onClick={() =>
-                          updateAnswers(answer.category, {
-                            expanded: !answer.expanded,
-                          })
-                        }
-                      ></SVG>
-                      <Text fontFamily="Roboto" fontSize={10}>
-                        {mode == "Questions"
-                          ? answer.question
-                          : answer.category}
-                      </Text>
-                    </AutoLayout>
-                    {/* text/input */}
-                    {answer.expanded ? (
-                      <Input
-                        fontFamily="Inter"
-                        fontSize={10}
-                        fontWeight="normal"
-                        inputFrameProps={{
-                          cornerRadius: 2,
-                          fill: "#FFF",
-                          horizontalAlignItems: "center",
-                          overflow: "visible",
-                          padding: 2,
-                          stroke: "#ABABAB",
-                          strokeWidth: 1,
-                          verticalAlignItems: "center",
-                        }}
-                        onTextEditEnd={(e) => {
-                          let text = e.characters.trim();
-                          console.log("text length ", text.length);
-                          updateAnswers(answer.category, {
-                            answer: text,
-                            answered: text.length ? true : false,
-                            expanded: text.length ? true : false,
-                          });
-                          setDate(createTime());
-                        }}
-                        value={answer.answer}
-                        width={150}
-                        paragraphSpacing={5}
-                      />
-                    ) : null}
-                  </AutoLayout>
-                ))}
-              {/* unanswered part */}
+              {/* unanswered title */}
               <AutoLayout
-                direction="vertical"
+                direction="horizontal"
                 spacing={6}
-                hidden={answers.filter((a) => a.answered).length == 0}
+                hidden={
+                  answers.filter((a) => a.answered || a.expanded).length == 0
+                }
               >
-                {/* unanswered title */}
-                <AutoLayout direction="horizontal" spacing={6}>
-                  <SVG
-                    src={unanswerExpand ? expanded : toexpand}
-                    onClick={() => setUnanswerExpand(!unanswerExpand)}
-                  ></SVG>
-                  <Text fontFamily="Roboto" fontSize={10}>
-                    Unanswered Questions
-                  </Text>
-                </AutoLayout>
-                {/* unanswered questions */}
-                {unanswerExpand
-                  ? answers
-                      .filter((a) => !a.answered && !a.expanded)
-                      .map((answer) => (
-                        <AutoLayout direction="vertical" spacing={6}>
-                          <AutoLayout direction="horizontal" spacing={6}>
-                            <SVG
-                              src={expand}
-                              onClick={() => {
-                                updateAnswers(answer.category, {
-                                  expanded: !answer.expanded,
-                                });
-                              }}
-                            ></SVG>
-                            <Text fontFamily="Roboto" fontSize={10}>
-                              {mode == "Questions"
-                                ? answer.question
-                                : answer.category}
-                            </Text>
-                          </AutoLayout>
-                        </AutoLayout>
-                      ))
-                  : null}
+                <SVG
+                  src={unanswerExpand ? expanded : toexpand}
+                  onClick={() => setUnanswerExpand(!unanswerExpand)}
+                ></SVG>
+                <Text fontFamily="Roboto" fontSize={10}>
+                  Unanswered Questions
+                </Text>
               </AutoLayout>
+              {/* unanswered questions */}
+              {unanswerExpand ||
+              answers.filter((a) => a.answered || a.expanded).length == 0
+                ? answers
+                    .filter((a) => !a.answered && !a.expanded)
+                    .map((answer) => (
+                      <AutoLayout direction="vertical" spacing={6}>
+                        <AutoLayout direction="horizontal" spacing={6}>
+                          <SVG
+                            src={expand}
+                            onClick={() => {
+                              updateAnswers(answer.category, {
+                                expanded: !answer.expanded,
+                              });
+                            }}
+                          ></SVG>
+                          <Text fontFamily="Roboto" fontSize={10}>
+                            {mode == "Questions"
+                              ? answer.question
+                              : answer.category}
+                          </Text>
+                        </AutoLayout>
+                      </AutoLayout>
+                    ))
+                : null}
             </AutoLayout>
-          )}
+          </AutoLayout>
         </AutoLayout>
       </AutoLayout>
     </AutoLayout>
