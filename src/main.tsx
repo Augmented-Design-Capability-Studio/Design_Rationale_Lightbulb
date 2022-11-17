@@ -50,12 +50,22 @@ const questions: { [category: string]: string } = {
   Task: "What needs to be done to this?",
   Problems: "What is wrong with this?",
 };
+
+interface Evidence {
+  text: string;
+  link: string;
+}
+
 interface Answers {
   category: string;
   question: string;
   answered: boolean;
   answer: string;
   expanded: boolean;
+  editAssignee: boolean;
+  assignee: string;
+  editEvidence: boolean;
+  evidence: Evidence[];
 }
 
 const initAnswers = Object.keys(questions).map((c) => ({
@@ -64,6 +74,10 @@ const initAnswers = Object.keys(questions).map((c) => ({
   answered: false,
   answer: "",
   expanded: false,
+  editAssignee: false,
+  assignee: "",
+  editEvidence: false,
+  evidence: [],
 }));
 
 function createTime() {
@@ -118,6 +132,10 @@ function Lightbulb() {
   const [unanswerExpand, setUnanswerExpand] = useSyncedState<boolean>(
     "unanswerExpand",
     true
+  );
+  const [curEvidence, setCurEvidence] = useSyncedState<Evidence>(
+    "curEvidence",
+    { text: "", link: "" }
   );
 
   // const [archivedObjects, setArchivedObjects] = useSyncedState<
@@ -290,9 +308,13 @@ function Lightbulb() {
             {answers
               .filter((a) => a.answered || a.expanded)
               .map((answer) => (
-                <AutoLayout direction="vertical" spacing={6}>
+                <AutoLayout
+                  direction="vertical"
+                  spacing={6}
+                  padding={{ bottom: 6 }}
+                >
                   {/* profile */}
-                  <AutoLayout
+                  {/* <AutoLayout
                     direction="horizontal"
                     horizontalAlignItems="center"
                     verticalAlignItems="center"
@@ -302,26 +324,26 @@ function Lightbulb() {
                   >
                     {photoUrl ? (
                       <Image
-                        cornerRadius={18}
-                        width={18}
-                        height={18}
+                        cornerRadius={15}
+                        width={15}
+                        height={15}
                         src={photoUrl}
                       />
                     ) : (
                       <Rectangle
-                        cornerRadius={18}
-                        width={18}
-                        height={18}
+                        cornerRadius={15}
+                        width={15}
+                        height={15}
                         fill="#2A2A2A"
                       />
                     )}
-                    <Text fontFamily="Inter" fontSize={10} fontWeight={400}>
+                    <Text fontFamily="Inter" fontSize={8} fontWeight={400}>
                       {name}
                     </Text>
-                    <Text fontFamily="Inter" fontSize={10} fill="#818181">
+                    <Text fontFamily="Inter" fontSize={8} fill="#818181">
                       {date}
                     </Text>
-                  </AutoLayout>
+                  </AutoLayout> */}
                   {/* expanded question/category */}
                   <AutoLayout direction="horizontal" spacing={6}>
                     <SVG
@@ -338,39 +360,302 @@ function Lightbulb() {
                   </AutoLayout>
                   {/* text/input */}
                   {answer.expanded ? (
-                    <Input
-                      fontFamily="Inter"
-                      fontSize={10}
-                      fontWeight="normal"
-                      inputFrameProps={{
-                        cornerRadius: 2,
-                        fill: "#FFF",
-                        horizontalAlignItems: "center",
-                        overflow: "visible",
-                        padding: 2,
-                        stroke: "#ABABAB",
-                        strokeWidth: 1,
-                        verticalAlignItems: "center",
-                      }}
-                      onTextEditEnd={(e) => {
-                        let text = e.characters.trim();
-                        console.log("text length ", text.length);
-                        updateAnswers(answer.category, {
-                          answer: text,
-                          answered: text.length ? true : false,
-                          expanded: text.length ? true : false,
-                        });
-                        setDate(createTime());
-                      }}
-                      value={answer.answer}
-                      width={150}
-                      paragraphSpacing={5}
-                    />
+                    <AutoLayout direction="vertical" spacing={6}>
+                      <AutoLayout
+                        direction="horizontal"
+                        horizontalAlignItems="center"
+                        verticalAlignItems="center"
+                        height="hug-contents"
+                        padding={0}
+                        spacing={8}
+                      >
+                        <Text fontFamily="Inter" fontSize={8} fontWeight={400}>
+                          {name}
+                        </Text>
+                        <Text fontFamily="Inter" fontSize={8} fill="#818181">
+                          {date}
+                        </Text>
+                      </AutoLayout>
+                      <Input
+                        fontFamily="Inter"
+                        fontSize={10}
+                        fontWeight="normal"
+                        inputFrameProps={{
+                          cornerRadius: 2,
+                          fill: "#FFF",
+                          horizontalAlignItems: "center",
+                          overflow: "visible",
+                          padding: 2,
+                          stroke: "#ABABAB",
+                          strokeWidth: 1,
+                          verticalAlignItems: "center",
+                        }}
+                        onTextEditEnd={(e) => {
+                          let text = e.characters.trim();
+                          updateAnswers(answer.category, {
+                            answer: text,
+                            answered: text.length ? true : false,
+                            expanded: text.length ? true : false,
+                          });
+                          setDate(createTime());
+                        }}
+                        value={answer.answer}
+                        width={150}
+                        paragraphSpacing={5}
+                      />
+                      {/* assignee */}
+                      {answer.assignee == "" ? (
+                        answer.editAssignee ? (
+                          <AutoLayout direction="vertical" spacing={3}>
+                            <AutoLayout direction="horizontal" spacing={50}>
+                              <Text fontFamily="Roboto" fontSize={8}>
+                                Assign to
+                              </Text>
+                              <Text
+                                fontFamily="Roboto"
+                                fontSize={8}
+                                onClick={() =>
+                                  updateAnswers(answer.category, {
+                                    editAssignee: false,
+                                  })
+                                }
+                              >
+                                X
+                              </Text>
+                            </AutoLayout>
+                            <Input
+                              fontFamily="Roboto"
+                              fontSize={8}
+                              fontWeight="normal"
+                              inputFrameProps={{
+                                cornerRadius: 2,
+                                fill: "#FFF",
+                                horizontalAlignItems: "center",
+                                overflow: "visible",
+                                padding: 2,
+                                stroke: "#ABABAB",
+                                strokeWidth: 1,
+                                verticalAlignItems: "center",
+                              }}
+                              onTextEditEnd={(e) => {
+                                let text = e.characters.trim();
+                                updateAnswers(answer.category, {
+                                  assignee: text,
+                                  editAssignee: text.length,
+                                });
+                              }}
+                              value={answer.assignee}
+                              width={150}
+                              paragraphSpacing={5}
+                            />
+                          </AutoLayout>
+                        ) : (
+                          <Text
+                            fontFamily="Roboto"
+                            fontSize={8}
+                            fontWeight={300}
+                            onClick={() =>
+                              updateAnswers(answer.category, {
+                                editAssignee: true,
+                              })
+                            }
+                          >
+                            + Add assignee
+                          </Text>
+                        )
+                      ) : (
+                        <AutoLayout direction="horizontal" spacing={2}>
+                          <Text fontFamily="Roboto" fontSize={8}>
+                            Assigned to
+                          </Text>
+                          <Text fontFamily="Roboto" fontSize={8} fill="#3366CC">
+                            @{answer.assignee}
+                          </Text>
+                          <Text
+                            fontFamily="Roboto"
+                            fontSize={8}
+                            onClick={() =>
+                              updateAnswers(answer.category, {
+                                assignee: "",
+                                editAssignee: false,
+                              })
+                            }
+                          >
+                            X
+                          </Text>
+                        </AutoLayout>
+                      )}
+
+                      {/* evidence or connection */}
+                      <AutoLayout direction="vertical" spacing={3}>
+                        {/* {answer.evidence.length > 0 ? ( */}
+                        <Text
+                          fontFamily="Roboto"
+                          fontSize={8}
+                          hidden={answer.evidence.length <= 0}
+                        >
+                          Evidence or connection
+                        </Text>
+                        {/* ) : ( */}
+                        {/* <AutoLayout></AutoLayout> */}
+                        {/* )} */}
+
+                        {answer.evidence.map((evi, i) => (
+                          <AutoLayout direction="horizontal" spacing={6}>
+                            <AutoLayout direction="vertical" spacing={6}>
+                              <Text fontFamily="Roboto" fontSize={8}>
+                                {evi.text}
+                              </Text>
+                              <Text
+                                fontFamily="Roboto"
+                                fontSize={8}
+                                fill="#3366CC"
+                              >
+                                {evi.link}
+                              </Text>
+                            </AutoLayout>
+                            <Text
+                              fontFamily="Roboto"
+                              fontSize={8}
+                              onClick={() => {
+                                let newEvidence = answer.evidence;
+                                newEvidence.splice(i);
+                                console.log(answer.evidence.map((e) => e.text));
+                                updateAnswers(answer.category, {
+                                  evidence: newEvidence,
+                                });
+                              }}
+                            >
+                              X
+                            </Text>
+                          </AutoLayout>
+                        ))}
+
+                        {answer.editEvidence ? (
+                          <AutoLayout direction="vertical" spacing={3}>
+                            <AutoLayout direction="horizontal" spacing={50}>
+                              <Text fontFamily="Roboto" fontSize={8}>
+                                Evidence or connection
+                              </Text>
+                              <Text
+                                fontFamily="Roboto"
+                                fontSize={8}
+                                onClick={() => {
+                                  updateAnswers(answer.category, {
+                                    editEvidence: false,
+                                  });
+                                }}
+                              >
+                                X
+                              </Text>
+                            </AutoLayout>
+                            <Text
+                              fontFamily="Roboto"
+                              fontSize={8}
+                              fontWeight={300}
+                            >
+                              Text
+                            </Text>
+                            <Input
+                              fontFamily="Roboto"
+                              fontSize={8}
+                              fontWeight="normal"
+                              inputFrameProps={{
+                                cornerRadius: 2,
+                                fill: "#FFF",
+                                horizontalAlignItems: "center",
+                                overflow: "visible",
+                                padding: 2,
+                                stroke: "#ABABAB",
+                                strokeWidth: 1,
+                                verticalAlignItems: "center",
+                              }}
+                              onTextEditEnd={(e) => {
+                                let text = e.characters.trim();
+                                setCurEvidence({
+                                  ...curEvidence,
+                                  ...{ text: text },
+                                });
+                              }}
+                              value={curEvidence.text}
+                              width={150}
+                              paragraphSpacing={5}
+                            />
+                            <Text
+                              fontFamily="Roboto"
+                              fontSize={8}
+                              fontWeight={300}
+                            >
+                              Link
+                            </Text>
+                            <Input
+                              fontFamily="Roboto"
+                              fontSize={8}
+                              fontWeight="normal"
+                              inputFrameProps={{
+                                cornerRadius: 2,
+                                fill: "#FFF",
+                                horizontalAlignItems: "center",
+                                overflow: "visible",
+                                padding: 2,
+                                stroke: "#ABABAB",
+                                strokeWidth: 1,
+                                verticalAlignItems: "center",
+                              }}
+                              onTextEditEnd={(e) => {
+                                let text = e.characters.trim();
+                                setCurEvidence({
+                                  ...curEvidence,
+                                  ...{ link: text },
+                                });
+                              }}
+                              value={curEvidence.link}
+                              width={150}
+                              paragraphSpacing={5}
+                            />
+                            <AutoLayout
+                              fill="#0D99FF"
+                              width={50}
+                              onClick={() => {
+                                let newEvidence = answer.evidence;
+                                newEvidence.push(curEvidence);
+                                setCurEvidence({ text: "", link: "" });
+                                updateAnswers(answer.category, {
+                                  evidence: newEvidence,
+                                  editEvidence: false,
+                                });
+                              }}
+                            >
+                              <Text
+                                fontFamily="Roboto"
+                                fontSize={8}
+                                fill="#FFF"
+                              >
+                                Add
+                              </Text>
+                            </AutoLayout>
+                          </AutoLayout>
+                        ) : (
+                          <Text
+                            fontFamily="Roboto"
+                            fontSize={8}
+                            fontWeight={300}
+                            onClick={() =>
+                              updateAnswers(answer.category, {
+                                editEvidence: true,
+                              })
+                            }
+                          >
+                            + Add evidence or connection
+                          </Text>
+                        )}
+                      </AutoLayout>
+                    </AutoLayout>
                   ) : null}
                 </AutoLayout>
               ))}
             {/* unanswered part */}
-            <AutoLayout direction="vertical" spacing={6}>
+            <AutoLayout direction="vertical" spacing={8}>
               {/* unanswered title */}
               <AutoLayout
                 direction="horizontal"
