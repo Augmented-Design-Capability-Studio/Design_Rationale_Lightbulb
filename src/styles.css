@@ -10,3 +10,8 @@
   margin: 5px;
   width: 100%;
 }
+
+.parent-title {
+  font-size: 18px;
+  cursor: pointer;
+}

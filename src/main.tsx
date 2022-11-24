@@ -1,28 +1,8 @@
 /** @jsx figma.widget.h */
 
-import { emit, once, showUI } from "@create-figma-plugin/utilities";
-import { RationaleObject } from "./ui";
-import { useCallback, useState } from "preact/hooks";
-
-// import expand from "./icons/expand.svg";
-// import addlink from "./icons/addlink.svg";
-// import link from "./icons/link.svg";
-// import archive from "./icons/archive.svg";
-// import cross from "./icons/cross.svg";
-// import dropdown from "./icons/dropdown.svg";
-// import edit from "./icons/edit.svg";
-// import threedots from "./icons/threedots.svg";
-
-const expand = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="5" cy="5" r="4.5" fill="#FDB827" stroke="#27251F"/>
-<path d="M4.96155 6.78265V3.57141H5.3953V6.78265H4.96155ZM3.57153 5.39264V4.96143H6.78531V5.39264H3.57153Z" fill="#27251F"/>
-</svg>`;
-const toexpand = `<svg width="6" height="11" viewBox="0 0 6 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M7.64541e-06 10.5423C-0.000332796 10.4819 0.0109533 10.4219 0.0332194 10.3659C0.0554854 10.3099 0.0882931 10.259 0.129761 10.2161L4.73378 5.48727L0.129762 0.758472C0.0564614 0.670558 0.0181596 0.557474 0.0225091 0.441815C0.0268586 0.326157 0.0735388 0.216443 0.153223 0.1346C0.232907 0.0527559 0.339726 0.00480986 0.452332 0.000342483C0.564939 -0.00412489 0.675041 0.0352156 0.760634 0.110502L6 5.48727L0.760633 10.8686C0.697822 10.9319 0.618257 10.9747 0.531883 10.9917C0.44551 11.0088 0.356159 10.9993 0.274999 10.9645C0.193838 10.9297 0.124468 10.8711 0.0755591 10.796C0.0266501 10.7209 0.000371286 10.6327 7.64541e-06 10.5423Z" fill="#27251F"/>
-</svg>`;
-const expanded = `<svg width="11" height="7" viewBox="0 0 11 7" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M0.457654 0.500007C0.518134 0.499667 0.578088 0.510953 0.63408 0.533219C0.69007 0.555485 0.740995 0.588293 0.783936 0.629761L5.51273 5.23378L10.2415 0.629762C10.3294 0.556461 10.4425 0.518159 10.5582 0.522509C10.6738 0.526858 10.7836 0.573539 10.8654 0.653223C10.9472 0.732907 10.9952 0.839726 10.9997 0.952332C11.0041 1.06494 10.9648 1.17504 10.8895 1.26063L5.51273 6.5L0.131372 1.26063C0.0681338 1.19782 0.0253138 1.11826 0.00826216 1.03188C-0.00878953 0.945509 0.000684278 0.856159 0.0354991 0.774998C0.070314 0.693838 0.128927 0.624468 0.20401 0.575559C0.279092 0.526649 0.367317 0.500371 0.457654 0.500007Z" fill="#27251F"/>
-</svg>`;
+import { once, showUI, emit, on } from "@create-figma-plugin/utilities";
+import { expand, toexpand, expanded, bulbSvgSrc } from "./icons";
+import { Answer, Evidence, LightbulbItem } from "./types";
 
 const { widget } = figma;
 const {
@@ -32,14 +12,17 @@ const {
   Text,
   useSyncedState,
   usePropertyMenu,
+  useStickable,
+  useStickableHost,
   useWidgetId,
   useEffect,
   Input,
   Frame,
   SVG,
 } = widget;
+
 export default function () {
-  widget.register(Lightbulb);
+  widget.register(Notepad);
 }
 
 const questions: { [category: string]: string } = {
@@ -50,23 +33,6 @@ const questions: { [category: string]: string } = {
   Task: "What needs to be done to this?",
   Problems: "What is wrong with this?",
 };
-
-interface Evidence {
-  text: string;
-  link: string;
-}
-
-interface Answers {
-  category: string;
-  question: string;
-  answered: boolean;
-  answer: string;
-  expanded: boolean;
-  editAssignee: boolean;
-  assignee: string;
-  editEvidence: boolean;
-  evidence: Evidence[];
-}
 
 const initAnswers = Object.keys(questions).map((c) => ({
   category: c,
@@ -90,45 +56,15 @@ function createTime() {
   return currentDate;
 }
 
-function Component(props: any) {
-  const [state, setState] = useSyncedState<boolean>("state", true);
-  console.log(props);
-  return (
-    <AutoLayout
-      direction="vertical"
-      verticalAlignItems="start"
-      height="hug-contents"
-      spacing={6}
-      padding={12}
-    >
-      <Text onClick={() => setState(!state)}>test component {props}</Text>
-      <AutoLayout hidden={state}>
-        <Text>show</Text>
-      </AutoLayout>
-    </AutoLayout>
-  );
-}
-
-function Lightbulb() {
-  const [showName, setShowName] = useSyncedState<boolean>("showName", true);
+function Notepad() {
   const [name, setName] = useSyncedState<string>("name", "");
-  const [photoUrl, setPhotoUrl] = useSyncedState<string | null>(
-    "photoUrl",
-    null
-  );
-  const [text, setText] = useSyncedState<string>("text", "");
   const [open, setOpen] = useSyncedState("open", true);
-  const [full, setFull] = useSyncedState("full", false);
-  const [editMode, setEditMode] = useSyncedState("editMode", false);
-  const [type, setType] = useSyncedState<string>("type", "Category 1");
-  const [selectOn, setSelectOn] = useSyncedState("selectOn", false);
   const [date, setDate] = useSyncedState("date", createTime());
-
   const [mode, setMode] = useSyncedState<string>("mode", "Questions"); // questions or categories
-  const [answers, setAnswers] = useSyncedState<Answers[]>(
+  const [answers, setAnswers] = useSyncedState<Answer[]>(
     "answers",
     initAnswers
-  ); // stores all answers, initial value = {}
+  ); // stores all answers of this widget, initial value = {}
   const [unanswerExpand, setUnanswerExpand] = useSyncedState<boolean>(
     "unanswerExpand",
     true
@@ -137,566 +73,530 @@ function Lightbulb() {
     "curEvidence",
     { text: "", link: "" }
   );
-
-  // const [archivedObjects, setArchivedObjects] = useSyncedState<
-  //   RationaleObject[]
-  // >("archivedObjects", []);
-
-  const color = "#FCF782";
-  const bulbSvgSrc = `<svg style="color: #f3da35" width="50" height="50" stroke-width="1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M21 2L20 3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M3 2L4 3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M21 16L20 15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M3 16L4 15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M9 18H15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M10 21H14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> <path d="M11.9998 3C7.9997 3 5.95186 4.95029 5.99985 8C6.02324 9.48689 6.4997 10.5 7.49985 11.5C8.5 12.5 9 13 8.99985 15H14.9998C15 13.0001 15.5 12.5 16.4997 11.5001L16.4998 11.5C17.4997 10.5 17.9765 9.48689 17.9998 8C18.0478 4.95029 16 3 11.9998 3Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="${color}"></path> </svg>`;
-
   const widgetId = useWidgetId();
-  const fileKey = figma.fileKey;
-
-  useEffect(() => {
-    if (!name) {
-      if (figma.currentUser) {
-        setName(figma.currentUser.name);
-        setPhotoUrl(figma.currentUser.photoUrl);
-      } else {
-        figma.notify("Please login to figma");
-      }
-    }
-  });
-
-  useEffect(() => {
-    figma.ui.onmessage = (msg) => {
-      if (msg.type === "show") {
-        figma.notify("Hello");
-      }
-      if (msg.type === "close") {
-        figma.closePlugin();
-      }
-    };
-  });
-
-  const handleArchived = (archivedObject: RationaleObject) => {
-    let archivedObjects: RationaleObject[] =
-      figma.currentPage.getPluginData("archivedObjects") === ""
-        ? []
-        : JSON.parse(figma.currentPage.getPluginData("archivedObjects"));
-    archivedObjects.push(archivedObject);
-    figma.currentPage.setPluginData(
-      "archivedObjects",
-      JSON.stringify(archivedObjects)
-    );
-    // emit("ARCHIVE", rationaleObject);
-  };
-
-  async function onChange({
-    propertyName,
-  }: WidgetPropertyEvent): Promise<void> {
-    await new Promise<void>(function (resolve: () => void): void {
-      if (propertyName === "showArchived") {
-        showUI(
-          { height: 1200, width: 300, position: { x: 0, y: 0 } },
-          { "show Archive": String }
-        );
-        let archivedObjects: RationaleObject[] =
-          figma.currentPage.getPluginData("archivedObjects") === ""
-            ? []
-            : JSON.parse(figma.currentPage.getPluginData("archivedObjects"));
-        emit("TEST", "test from showUI");
-        emit("ARCHIVE", archivedObjects);
-        // once("UPDATE_TEXT", function (text: string): void {
-        //   setText(text);
-        //   resolve();
-        // });
-      }
-    });
-  }
-
-  usePropertyMenu(
-    [
-      {
-        itemType: "action",
-        tooltip: "Show archived",
-        propertyName: "showArchived",
-      },
-    ],
-    onChange
-  );
-
-  async function onDelete({
-    propertyName,
-  }: WidgetPropertyEvent): Promise<void> {
-    await new Promise<void>(function (resolve: () => void): void {
-      if (propertyName === "showArchived") {
-        showUI({ height: 144, width: 240 }, { " ": String });
-        // once("UPDATE_TEXT", function (text: string): void {
-        //   setText(text);
-        //   resolve();
-        // });
-      }
-    });
-  }
 
   const updateAnswers = (category: string, newData: {}) => {
+    // update the current widget answer
     console.log("updateAnswers", newData);
     let newAnswers = answers;
     let index = newAnswers.findIndex((a) => a.category == category);
     newAnswers[index] = { ...answers[index], ...newData };
     setAnswers(newAnswers);
     console.log("newAnswers", newAnswers);
+
+    // update the answers stored in figmaplugindata
+    let lightbulbList: LightbulbItem[] =
+      figma.currentPage.getPluginData("lightbulbList") === "{}"
+        ? []
+        : JSON.parse(figma.currentPage.getPluginData("lightbulbList"));
+    console.log("widgetId", widgetId);
+    if (lightbulbList.length)
+      lightbulbList = lightbulbList.filter((lb) => lb.widgetId !== widgetId); // remove the previous data
+    let newLightbulb: LightbulbItem = {
+      answers: answers,
+      widgetId: widgetId,
+      parentNode: {
+        id: figma.currentPage.selection[0].parent?.id,
+        name: figma.currentPage.selection[0].parent?.name,
+      },
+      lastEditTime: 1,
+    };
+    lightbulbList.push(newLightbulb);
+    figma.currentPage.setPluginData(
+      "lightbulbList",
+      JSON.stringify(lightbulbList)
+    );
+  };
+
+  const items: Array<WidgetPropertyMenuItem> = [
+    {
+      itemType: "action",
+      propertyName: "edit",
+      tooltip: "Edit",
+    },
+  ];
+  async function onChange({
+    propertyName,
+  }: WidgetPropertyEvent): Promise<void> {
+    await new Promise<void>(function (resolve: () => void): void {
+      if (propertyName === "edit") {
+        console.log("edit");
+        showUI({ height: 1200, width: 300, position: { x: 0, y: 0 } });
+
+        on("UPDATE_FOCUS", function (id: string): void {
+          console.log("UPDATE_FOCUS main", id);
+          handleFocus(id);
+          // resolve();
+        });
+        on("UPDATE_LIST", function (newList: LightbulbItem[]): void {
+          figma.currentPage.setPluginData(
+            "lightbulbList",
+            JSON.stringify(newList)
+          );
+        });
+
+        let lightbulbList: LightbulbItem[] =
+          figma.currentPage.getPluginData("lightbulbList") === ""
+            ? []
+            : JSON.parse(figma.currentPage.getPluginData("lightbulbList"));
+        emit("ARCHIVE", lightbulbList);
+      }
+    });
+  }
+  usePropertyMenu(items, onChange);
+
+  const handleFocus = (id: string) => {
+    const selectionNode: Array<any> = [];
+    selectionNode.push(figma.getNodeById(id));
+    figma.currentPage.selection = selectionNode;
+    figma.viewport.scrollAndZoomIntoView(selectionNode);
   };
 
   return (
-    <AutoLayout
-      direction="horizontal"
-      height="hug-contents"
-      padding={4}
-      name="Widget"
-      overflow="visible"
-    >
-      <SVG src={bulbSvgSrc} onClick={() => setOpen(!open)} />
-
+    <AutoLayout>
       <AutoLayout
-        direction="vertical"
-        verticalAlignItems="start"
+        direction="horizontal"
         height="hug-contents"
-        spacing={6}
-        padding={12}
-        cornerRadius={8}
-        width={200}
-        fill="#FFF"
-        stroke="#000"
-        hidden={!open}
+        padding={4}
+        name="Widget"
+        overflow="visible"
       >
-        {/* tabs */}
-        <AutoLayout
-          direction="horizontal"
-          horizontalAlignItems="center"
-          verticalAlignItems="center"
-          height="hug-contents"
-          padding={{ top: 5, left: 8, bottom: 0, right: 8 }}
-          spacing={12}
-        >
-          <Text
-            fontFamily="Roboto"
-            fontSize={12}
-            fontWeight={600}
-            onClick={() => setMode("Questions")}
-            fill={mode == "Questions" ? "#0B339A" : "#000000"}
-            textDecoration={mode == "Questions" ? "underline" : "none"}
-          >
-            Questions
-          </Text>
-          <Text
-            fontFamily="Roboto"
-            fontSize={12}
-            fontWeight={600}
-            onClick={() => setMode("Categories")}
-            fill={mode == "Categories" ? "#0B339A" : "#000000"}
-            textDecoration={mode == "Categories" ? "underline" : "none"}
-          >
-            Categories
-          </Text>
-        </AutoLayout>
+        <SVG src={bulbSvgSrc} onClick={() => setOpen(!open)} />
 
-        {/* question/categories list */}
         <AutoLayout
           direction="vertical"
           verticalAlignItems="start"
           height="hug-contents"
-          spacing={10}
+          spacing={6}
           padding={12}
           cornerRadius={8}
+          width={200}
+          fill="#FFF"
+          stroke="#000"
+          hidden={!open}
         >
-          {/* when there are answers */}
-          <AutoLayout direction="vertical" spacing={6}>
-            {/* answered part */}
-            {answers
-              .filter((a) => a.answered || a.expanded)
-              .map((answer) => (
-                <AutoLayout
-                  direction="vertical"
-                  spacing={6}
-                  padding={{ bottom: 6 }}
-                >
-                  {/* profile */}
-                  {/* <AutoLayout
-                    direction="horizontal"
-                    horizontalAlignItems="center"
-                    verticalAlignItems="center"
-                    height="hug-contents"
-                    padding={0}
-                    spacing={8}
+          {/* tabs */}
+          <AutoLayout
+            direction="horizontal"
+            horizontalAlignItems="center"
+            verticalAlignItems="center"
+            height="hug-contents"
+            padding={{ top: 5, left: 8, bottom: 0, right: 8 }}
+            spacing={12}
+          >
+            <Text
+              fontFamily="Roboto"
+              fontSize={12}
+              fontWeight={600}
+              onClick={() => setMode("Questions")}
+              fill={mode == "Questions" ? "#0B339A" : "#000000"}
+              textDecoration={mode == "Questions" ? "underline" : "none"}
+            >
+              Questions
+            </Text>
+            <Text
+              fontFamily="Roboto"
+              fontSize={12}
+              fontWeight={600}
+              onClick={() => setMode("Categories")}
+              fill={mode == "Categories" ? "#0B339A" : "#000000"}
+              textDecoration={mode == "Categories" ? "underline" : "none"}
+            >
+              Categories
+            </Text>
+          </AutoLayout>
+
+          {/* question/categories list */}
+          <AutoLayout
+            direction="vertical"
+            verticalAlignItems="start"
+            height="hug-contents"
+            spacing={10}
+            padding={12}
+            cornerRadius={8}
+          >
+            {/* when there are answers */}
+            <AutoLayout direction="vertical" spacing={6}>
+              {/* answered part */}
+              {answers
+                .filter((a) => a.answered || a.expanded)
+                .map((answer, index) => (
+                  <AutoLayout
+                    key={index}
+                    direction="vertical"
+                    spacing={6}
+                    padding={{ bottom: 6 }}
                   >
-                    {photoUrl ? (
-                      <Image
-                        cornerRadius={15}
-                        width={15}
-                        height={15}
-                        src={photoUrl}
-                      />
-                    ) : (
-                      <Rectangle
-                        cornerRadius={15}
-                        width={15}
-                        height={15}
-                        fill="#2A2A2A"
-                      />
-                    )}
-                    <Text fontFamily="Inter" fontSize={8} fontWeight={400}>
-                      {name}
-                    </Text>
-                    <Text fontFamily="Inter" fontSize={8} fill="#818181">
-                      {date}
-                    </Text>
-                  </AutoLayout> */}
-                  {/* expanded question/category */}
-                  <AutoLayout direction="horizontal" spacing={6}>
-                    <SVG
-                      src={answer.expanded ? expanded : toexpand}
-                      onClick={() =>
-                        updateAnswers(answer.category, {
-                          expanded: !answer.expanded,
-                        })
-                      }
-                    ></SVG>
-                    <Text fontFamily="Roboto" fontSize={10}>
-                      {mode == "Questions" ? answer.question : answer.category}
-                    </Text>
-                  </AutoLayout>
-                  {/* text/input */}
-                  {answer.expanded ? (
-                    <AutoLayout direction="vertical" spacing={6}>
-                      <AutoLayout
-                        direction="horizontal"
-                        horizontalAlignItems="center"
-                        verticalAlignItems="center"
-                        height="hug-contents"
-                        padding={0}
-                        spacing={8}
-                      >
-                        <Text fontFamily="Inter" fontSize={8} fontWeight={400}>
-                          {name}
-                        </Text>
-                        <Text fontFamily="Inter" fontSize={8} fill="#818181">
-                          {date}
-                        </Text>
-                      </AutoLayout>
-                      <Input
-                        fontFamily="Inter"
-                        fontSize={10}
-                        fontWeight="normal"
-                        inputFrameProps={{
-                          cornerRadius: 2,
-                          fill: "#FFF",
-                          horizontalAlignItems: "center",
-                          overflow: "visible",
-                          padding: 2,
-                          stroke: "#ABABAB",
-                          strokeWidth: 1,
-                          verticalAlignItems: "center",
-                        }}
-                        onTextEditEnd={(e) => {
-                          let text = e.characters.trim();
+                    {/* expanded question/category */}
+                    <AutoLayout direction="horizontal" spacing={6}>
+                      <SVG
+                        src={answer.expanded ? expanded : toexpand}
+                        onClick={() =>
                           updateAnswers(answer.category, {
-                            answer: text,
-                            answered: text.length ? true : false,
-                            expanded: text.length ? true : false,
-                          });
-                          setDate(createTime());
-                        }}
-                        value={answer.answer}
-                        width={150}
-                        paragraphSpacing={5}
-                      />
-                      {/* assignee */}
-                      {answer.assignee == "" ? (
-                        answer.editAssignee ? (
-                          <AutoLayout direction="vertical" spacing={3}>
-                            <AutoLayout direction="horizontal" spacing={50}>
-                              <Text fontFamily="Roboto" fontSize={8}>
-                                Assign to
-                              </Text>
-                              <Text
-                                fontFamily="Roboto"
-                                fontSize={8}
-                                onClick={() =>
-                                  updateAnswers(answer.category, {
-                                    editAssignee: false,
-                                  })
-                                }
-                              >
-                                X
-                              </Text>
-                            </AutoLayout>
-                            <Input
-                              fontFamily="Roboto"
-                              fontSize={8}
-                              fontWeight="normal"
-                              inputFrameProps={{
-                                cornerRadius: 2,
-                                fill: "#FFF",
-                                horizontalAlignItems: "center",
-                                overflow: "visible",
-                                padding: 2,
-                                stroke: "#ABABAB",
-                                strokeWidth: 1,
-                                verticalAlignItems: "center",
-                              }}
-                              onTextEditEnd={(e) => {
-                                let text = e.characters.trim();
-                                updateAnswers(answer.category, {
-                                  assignee: text,
-                                  editAssignee: text.length,
-                                });
-                              }}
-                              value={answer.assignee}
-                              width={150}
-                              paragraphSpacing={5}
-                            />
-                          </AutoLayout>
-                        ) : (
+                            expanded: !answer.expanded,
+                          })
+                        }
+                      ></SVG>
+                      <Text fontFamily="Roboto" fontSize={10}>
+                        {mode == "Questions"
+                          ? answer.question
+                          : answer.category}
+                      </Text>
+                    </AutoLayout>
+                    {/* text/input */}
+                    {answer.expanded ? (
+                      <AutoLayout direction="vertical" spacing={6}>
+                        <AutoLayout
+                          direction="horizontal"
+                          horizontalAlignItems="center"
+                          verticalAlignItems="center"
+                          height="hug-contents"
+                          padding={0}
+                          spacing={8}
+                        >
                           <Text
-                            fontFamily="Roboto"
+                            fontFamily="Inter"
                             fontSize={8}
-                            fontWeight={300}
-                            onClick={() =>
-                              updateAnswers(answer.category, {
-                                editAssignee: true,
-                              })
-                            }
+                            fontWeight={400}
                           >
-                            + Add assignee
+                            {name}
                           </Text>
-                        )
-                      ) : (
-                        <AutoLayout direction="horizontal" spacing={2}>
-                          <Text fontFamily="Roboto" fontSize={8}>
-                            Assigned to
-                          </Text>
-                          <Text fontFamily="Roboto" fontSize={8} fill="#3366CC">
-                            @{answer.assignee}
-                          </Text>
-                          <Text
-                            fontFamily="Roboto"
-                            fontSize={8}
-                            onClick={() =>
-                              updateAnswers(answer.category, {
-                                assignee: "",
-                                editAssignee: false,
-                              })
-                            }
-                          >
-                            X
+                          <Text fontFamily="Inter" fontSize={8} fill="#818181">
+                            {date}
                           </Text>
                         </AutoLayout>
-                      )}
-
-                      {/* evidence or connection */}
-                      <AutoLayout direction="vertical" spacing={3}>
-                        {/* {answer.evidence.length > 0 ? ( */}
-                        <Text
-                          fontFamily="Roboto"
-                          fontSize={8}
-                          hidden={answer.evidence.length <= 0}
-                        >
-                          Evidence or connection
-                        </Text>
-                        {/* ) : ( */}
-                        {/* <AutoLayout></AutoLayout> */}
-                        {/* )} */}
-
-                        {answer.evidence.map((evi, i) => (
-                          <AutoLayout direction="horizontal" spacing={6}>
-                            <AutoLayout direction="vertical" spacing={6}>
-                              <Text fontFamily="Roboto" fontSize={8}>
-                                {evi.text}
-                              </Text>
-                              <Text
+                        <Input
+                          fontFamily="Inter"
+                          fontSize={10}
+                          fontWeight="normal"
+                          inputFrameProps={{
+                            cornerRadius: 2,
+                            fill: "#FFF",
+                            horizontalAlignItems: "center",
+                            overflow: "visible",
+                            padding: 2,
+                            stroke: "#ABABAB",
+                            strokeWidth: 1,
+                            verticalAlignItems: "center",
+                          }}
+                          onTextEditEnd={(e) => {
+                            let text = e.characters.trim();
+                            updateAnswers(answer.category, {
+                              answer: text,
+                              answered: text.length ? true : false,
+                              expanded: text.length ? true : false,
+                            });
+                            setDate(createTime());
+                          }}
+                          value={answer.answer}
+                          width={150}
+                          paragraphSpacing={5}
+                        />
+                        {/* assignee */}
+                        {answer.assignee == "" ? (
+                          answer.editAssignee ? (
+                            <AutoLayout direction="vertical" spacing={3}>
+                              <AutoLayout direction="horizontal" spacing={50}>
+                                <Text fontFamily="Roboto" fontSize={8}>
+                                  Assign to
+                                </Text>
+                                <Text
+                                  fontFamily="Roboto"
+                                  fontSize={8}
+                                  onClick={() =>
+                                    updateAnswers(answer.category, {
+                                      editAssignee: false,
+                                    })
+                                  }
+                                >
+                                  X
+                                </Text>
+                              </AutoLayout>
+                              <Input
                                 fontFamily="Roboto"
                                 fontSize={8}
-                                fill="#3366CC"
-                              >
-                                {evi.link}
-                              </Text>
+                                fontWeight="normal"
+                                inputFrameProps={{
+                                  cornerRadius: 2,
+                                  fill: "#FFF",
+                                  horizontalAlignItems: "center",
+                                  overflow: "visible",
+                                  padding: 2,
+                                  stroke: "#ABABAB",
+                                  strokeWidth: 1,
+                                  verticalAlignItems: "center",
+                                }}
+                                onTextEditEnd={(e) => {
+                                  let text = e.characters.trim();
+                                  updateAnswers(answer.category, {
+                                    assignee: text,
+                                    editAssignee: text.length,
+                                  });
+                                }}
+                                value={answer.assignee}
+                                width={150}
+                                paragraphSpacing={5}
+                              />
                             </AutoLayout>
+                          ) : (
                             <Text
                               fontFamily="Roboto"
                               fontSize={8}
-                              onClick={() => {
-                                let newEvidence = answer.evidence;
-                                newEvidence.splice(i);
-                                console.log(answer.evidence.map((e) => e.text));
+                              fontWeight={300}
+                              onClick={() =>
                                 updateAnswers(answer.category, {
-                                  evidence: newEvidence,
-                                });
-                              }}
+                                  editAssignee: true,
+                                })
+                              }
+                            >
+                              + Add assignee
+                            </Text>
+                          )
+                        ) : (
+                          <AutoLayout direction="horizontal" spacing={2}>
+                            <Text fontFamily="Roboto" fontSize={8}>
+                              Assigned to
+                            </Text>
+                            <Text
+                              fontFamily="Roboto"
+                              fontSize={8}
+                              fill="#3366CC"
+                            >
+                              @{answer.assignee}
+                            </Text>
+                            <Text
+                              fontFamily="Roboto"
+                              fontSize={8}
+                              onClick={() =>
+                                updateAnswers(answer.category, {
+                                  assignee: "",
+                                  editAssignee: false,
+                                })
+                              }
                             >
                               X
                             </Text>
                           </AutoLayout>
-                        ))}
+                        )}
 
-                        {answer.editEvidence ? (
-                          <AutoLayout direction="vertical" spacing={3}>
-                            <AutoLayout direction="horizontal" spacing={50}>
-                              <Text fontFamily="Roboto" fontSize={8}>
-                                Evidence or connection
-                              </Text>
+                        {/* evidence or connection */}
+                        <AutoLayout direction="vertical" spacing={3}>
+                          {/* {answer.evidence.length > 0 ? ( */}
+                          <Text
+                            fontFamily="Roboto"
+                            fontSize={8}
+                            hidden={answer.evidence.length <= 0}
+                          >
+                            Evidence or connection
+                          </Text>
+                          {/* ) : ( */}
+                          {/* <AutoLayout></AutoLayout> */}
+                          {/* )} */}
+
+                          {answer.evidence.map((evi, i) => (
+                            <AutoLayout
+                              key={i}
+                              direction="horizontal"
+                              spacing={6}
+                            >
+                              <AutoLayout direction="vertical" spacing={6}>
+                                <Text fontFamily="Roboto" fontSize={8}>
+                                  {evi.text}
+                                </Text>
+                                <Text
+                                  fontFamily="Roboto"
+                                  fontSize={8}
+                                  fill="#3366CC"
+                                >
+                                  {evi.link}
+                                </Text>
+                              </AutoLayout>
                               <Text
                                 fontFamily="Roboto"
                                 fontSize={8}
                                 onClick={() => {
+                                  let newEvidence = answer.evidence;
+                                  newEvidence.splice(i);
+                                  console.log(
+                                    answer.evidence.map((e) => e.text)
+                                  );
                                   updateAnswers(answer.category, {
-                                    editEvidence: false,
+                                    evidence: newEvidence,
                                   });
                                 }}
                               >
                                 X
                               </Text>
                             </AutoLayout>
-                            <Text
-                              fontFamily="Roboto"
-                              fontSize={8}
-                              fontWeight={300}
-                            >
-                              Text
-                            </Text>
-                            <Input
-                              fontFamily="Roboto"
-                              fontSize={8}
-                              fontWeight="normal"
-                              inputFrameProps={{
-                                cornerRadius: 2,
-                                fill: "#FFF",
-                                horizontalAlignItems: "center",
-                                overflow: "visible",
-                                padding: 2,
-                                stroke: "#ABABAB",
-                                strokeWidth: 1,
-                                verticalAlignItems: "center",
-                              }}
-                              onTextEditEnd={(e) => {
-                                let text = e.characters.trim();
-                                setCurEvidence({
-                                  ...curEvidence,
-                                  ...{ text: text },
-                                });
-                              }}
-                              value={curEvidence.text}
-                              width={150}
-                              paragraphSpacing={5}
-                            />
-                            <Text
-                              fontFamily="Roboto"
-                              fontSize={8}
-                              fontWeight={300}
-                            >
-                              Link
-                            </Text>
-                            <Input
-                              fontFamily="Roboto"
-                              fontSize={8}
-                              fontWeight="normal"
-                              inputFrameProps={{
-                                cornerRadius: 2,
-                                fill: "#FFF",
-                                horizontalAlignItems: "center",
-                                overflow: "visible",
-                                padding: 2,
-                                stroke: "#ABABAB",
-                                strokeWidth: 1,
-                                verticalAlignItems: "center",
-                              }}
-                              onTextEditEnd={(e) => {
-                                let text = e.characters.trim();
-                                setCurEvidence({
-                                  ...curEvidence,
-                                  ...{ link: text },
-                                });
-                              }}
-                              value={curEvidence.link}
-                              width={150}
-                              paragraphSpacing={5}
-                            />
-                            <AutoLayout
-                              fill="#0D99FF"
-                              width={50}
-                              onClick={() => {
-                                let newEvidence = answer.evidence;
-                                newEvidence.push(curEvidence);
-                                setCurEvidence({ text: "", link: "" });
-                                updateAnswers(answer.category, {
-                                  evidence: newEvidence,
-                                  editEvidence: false,
-                                });
-                              }}
-                            >
+                          ))}
+
+                          {answer.editEvidence ? (
+                            <AutoLayout direction="vertical" spacing={3}>
+                              <AutoLayout direction="horizontal" spacing={50}>
+                                <Text fontFamily="Roboto" fontSize={8}>
+                                  Evidence or connection
+                                </Text>
+                                <Text
+                                  fontFamily="Roboto"
+                                  fontSize={8}
+                                  onClick={() => {
+                                    updateAnswers(answer.category, {
+                                      editEvidence: false,
+                                    });
+                                  }}
+                                >
+                                  X
+                                </Text>
+                              </AutoLayout>
                               <Text
                                 fontFamily="Roboto"
                                 fontSize={8}
-                                fill="#FFF"
+                                fontWeight={300}
                               >
-                                Add
+                                Text
                               </Text>
+                              <Input
+                                fontFamily="Roboto"
+                                fontSize={8}
+                                fontWeight="normal"
+                                inputFrameProps={{
+                                  cornerRadius: 2,
+                                  fill: "#FFF",
+                                  horizontalAlignItems: "center",
+                                  overflow: "visible",
+                                  padding: 2,
+                                  stroke: "#ABABAB",
+                                  strokeWidth: 1,
+                                  verticalAlignItems: "center",
+                                }}
+                                onTextEditEnd={(e) => {
+                                  let text = e.characters.trim();
+                                  setCurEvidence({
+                                    ...curEvidence,
+                                    ...{ text: text },
+                                  });
+                                }}
+                                value={curEvidence.text}
+                                width={150}
+                                paragraphSpacing={5}
+                              />
+                              <Text
+                                fontFamily="Roboto"
+                                fontSize={8}
+                                fontWeight={300}
+                              >
+                                Link
+                              </Text>
+                              <Input
+                                fontFamily="Roboto"
+                                fontSize={8}
+                                fontWeight="normal"
+                                inputFrameProps={{
+                                  cornerRadius: 2,
+                                  fill: "#FFF",
+                                  horizontalAlignItems: "center",
+                                  overflow: "visible",
+                                  padding: 2,
+                                  stroke: "#ABABAB",
+                                  strokeWidth: 1,
+                                  verticalAlignItems: "center",
+                                }}
+                                onTextEditEnd={(e) => {
+                                  let text = e.characters.trim();
+                                  setCurEvidence({
+                                    ...curEvidence,
+                                    ...{ link: text },
+                                  });
+                                }}
+                                value={curEvidence.link}
+                                width={150}
+                                paragraphSpacing={5}
+                              />
+                              <AutoLayout
+                                fill="#0D99FF"
+                                width={50}
+                                onClick={() => {
+                                  let newEvidence = answer.evidence;
+                                  newEvidence.push(curEvidence);
+                                  setCurEvidence({ text: "", link: "" });
+                                  updateAnswers(answer.category, {
+                                    evidence: newEvidence,
+                                    editEvidence: false,
+                                  });
+                                }}
+                              >
+                                <Text
+                                  fontFamily="Roboto"
+                                  fontSize={8}
+                                  fill="#FFF"
+                                >
+                                  Add
+                                </Text>
+                              </AutoLayout>
                             </AutoLayout>
-                          </AutoLayout>
-                        ) : (
-                          <Text
-                            fontFamily="Roboto"
-                            fontSize={8}
-                            fontWeight={300}
-                            onClick={() =>
-                              updateAnswers(answer.category, {
-                                editEvidence: true,
-                              })
-                            }
-                          >
-                            + Add evidence or connection
-                          </Text>
-                        )}
-                      </AutoLayout>
-                    </AutoLayout>
-                  ) : null}
-                </AutoLayout>
-              ))}
-            {/* unanswered part */}
-            <AutoLayout direction="vertical" spacing={8}>
-              {/* unanswered title */}
-              <AutoLayout
-                direction="horizontal"
-                spacing={6}
-                hidden={
-                  answers.filter((a) => a.answered || a.expanded).length == 0
-                }
-              >
-                <SVG
-                  src={unanswerExpand ? expanded : toexpand}
-                  onClick={() => setUnanswerExpand(!unanswerExpand)}
-                ></SVG>
-                <Text fontFamily="Roboto" fontSize={10}>
-                  Unanswered Questions
-                </Text>
-              </AutoLayout>
-              {/* unanswered questions */}
-              {unanswerExpand ||
-              answers.filter((a) => a.answered || a.expanded).length == 0
-                ? answers
-                    .filter((a) => !a.answered && !a.expanded)
-                    .map((answer) => (
-                      <AutoLayout direction="vertical" spacing={6}>
-                        <AutoLayout direction="horizontal" spacing={6}>
-                          <SVG
-                            src={expand}
-                            onClick={() => {
-                              updateAnswers(answer.category, {
-                                expanded: !answer.expanded,
-                              });
-                            }}
-                          ></SVG>
-                          <Text fontFamily="Roboto" fontSize={10}>
-                            {mode == "Questions"
-                              ? answer.question
-                              : answer.category}
-                          </Text>
+                          ) : (
+                            <Text
+                              fontFamily="Roboto"
+                              fontSize={8}
+                              fontWeight={300}
+                              onClick={() =>
+                                updateAnswers(answer.category, {
+                                  editEvidence: true,
+                                })
+                              }
+                            >
+                              + Add evidence or connection
+                            </Text>
+                          )}
                         </AutoLayout>
                       </AutoLayout>
-                    ))
-                : null}
+                    ) : null}
+                  </AutoLayout>
+                ))}
+              {/* unanswered part */}
+              <AutoLayout direction="vertical" spacing={8}>
+                {/* unanswered title */}
+                <AutoLayout
+                  direction="horizontal"
+                  spacing={6}
+                  hidden={
+                    answers.filter((a) => a.answered || a.expanded).length == 0
+                  }
+                >
+                  <SVG
+                    src={unanswerExpand ? expanded : toexpand}
+                    onClick={() => setUnanswerExpand(!unanswerExpand)}
+                  ></SVG>
+                  <Text fontFamily="Roboto" fontSize={10}>
+                    Unanswered Questions
+                  </Text>
+                </AutoLayout>
+                {/* unanswered questions */}
+                {unanswerExpand ||
+                answers.filter((a) => a.answered || a.expanded).length == 0
+                  ? answers
+                      .filter((a) => !a.answered && !a.expanded)
+                      .map((answer, i) => (
+                        <AutoLayout key={i} direction="vertical" spacing={6}>
+                          <AutoLayout direction="horizontal" spacing={6}>
+                            <SVG
+                              src={expand}
+                              onClick={() => {
+                                updateAnswers(answer.category, {
+                                  expanded: !answer.expanded,
+                                });
+                              }}
+                            ></SVG>
+                            <Text fontFamily="Roboto" fontSize={10}>
+                              {mode == "Questions"
+                                ? answer.question
+                                : answer.category}
+                            </Text>
+                          </AutoLayout>
+                        </AutoLayout>
+                      ))
+                  : null}
+              </AutoLayout>
             </AutoLayout>
           </AutoLayout>
         </AutoLayout>
