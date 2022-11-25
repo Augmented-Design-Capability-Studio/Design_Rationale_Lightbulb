@@ -37,13 +37,13 @@ function Plugin(props: { text: string }) {
     },
     [lightbulbList]
   );
-  const handleDeleteButtonClick = (index: number) => {
+  const handleDeleteButtonClick = (index: number, widgetId: string) => {
     console.log("delete index ", index);
     let newList = [...lightbulbList];
     newList.splice(index, 1);
     console.log("splice ", newList);
     setLightbulbList(newList);
-    emit("UPDATE_LIST", newList);
+    emit("UPDATE_LIST", newList, widgetId);
   };
 
   return (
@@ -75,7 +75,10 @@ function Plugin(props: { text: string }) {
               {/* <p>{answer.evidence}</p> */}
             </div>
           ))}
-          <Button fullWidth onClick={() => handleDeleteButtonClick(index)}>
+          <Button
+            fullWidth
+            onClick={() => handleDeleteButtonClick(index, obj.widgetId)}
+          >
             Delete
           </Button>
         </div>

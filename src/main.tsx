@@ -128,11 +128,17 @@ function Notepad() {
           handleFocus(id);
           // resolve();
         });
-        on("UPDATE_LIST", function (newList: LightbulbItem[]): void {
+        on("UPDATE_LIST", function (newList: LightbulbItem[], widgetId): void {
           figma.currentPage.setPluginData(
             "lightbulbList",
             JSON.stringify(newList)
           );
+          console.log(
+            "findWidgetNodesByWidgetId",
+            widgetId,
+            figma.currentPage.findOne((n) => n.id == widgetId)
+          );
+          figma.currentPage.findOne((n) => n.id == widgetId)?.remove();
         });
 
         let lightbulbList: LightbulbItem[] =
