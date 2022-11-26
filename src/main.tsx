@@ -1,7 +1,7 @@
 /** @jsx figma.widget.h */
 
 import { once, showUI, emit, on } from "@create-figma-plugin/utilities";
-import { expand, toexpand, expanded, bulbSvgSrc } from "./icons";
+import { expand, toexpand, expanded, bulbSvgSrc, circle, done } from "./icons";
 import { Answer, Evidence, LightbulbItem } from "./types";
 
 const { widget } = figma;
@@ -22,7 +22,7 @@ const {
 } = widget;
 
 export default function () {
-  widget.register(Notepad);
+  widget.register(Lightbulb);
 }
 
 const questions: { [category: string]: string } = {
@@ -46,6 +46,15 @@ const initAnswers = Object.keys(questions).map((c) => ({
   evidence: [],
 }));
 
+const colors: { [category: string]: string } = {
+  "Design Rationale": "#343448",
+  Function: "#FB6107",
+  Behavior: "#5C8001",
+  "Additional Context": "#F2B5D4",
+  Task: "#DFE2D7",
+  Problems: "#FFDD86",
+};
+
 function createTime() {
   const date = new Date();
   const day = date.getDate();
@@ -56,7 +65,7 @@ function createTime() {
   return currentDate;
 }
 
-function Notepad() {
+function Lightbulb() {
   const [name, setName] = useSyncedState<string>("name", "");
   const [open, setOpen] = useSyncedState("open", true);
   const [date, setDate] = useSyncedState("date", createTime());
@@ -74,6 +83,17 @@ function Notepad() {
     { text: "", link: "" }
   );
   const widgetId = useWidgetId();
+
+  useEffect(() => {
+    if (!name) {
+      if (figma.currentUser) {
+        setName(figma.currentUser.name);
+        // setPhotoUrl(figma.currentUser.photoUrl);
+      } else {
+        figma.notify("Please login to figma");
+      }
+    }
+  });
 
   const updateAnswers = (category: string, newData: {}) => {
     // update the current widget answer
@@ -124,7 +144,7 @@ function Notepad() {
         showUI({ height: 1200, width: 300, position: { x: 0, y: 0 } });
 
         on("UPDATE_FOCUS", function (id: string): void {
-          console.log("UPDATE_FOCUS main", id);
+          // console.log("UPDATE_FOCUS main", id);
           handleFocus(id);
           // resolve();
         });
@@ -243,6 +263,7 @@ function Notepad() {
                           })
                         }
                       ></SVG>
+                      <SVG src={circle(colors[answer.category])}></SVG>
                       <Text fontFamily="Roboto" fontSize={10}>
                         {mode == "Questions"
                           ? answer.question
@@ -519,8 +540,6 @@ function Notepad() {
                                 paragraphSpacing={5}
                               />
                               <AutoLayout
-                                fill="#0D99FF"
-                                width={50}
                                 onClick={() => {
                                   let newEvidence = answer.evidence;
                                   newEvidence.push(curEvidence);
@@ -531,13 +550,7 @@ function Notepad() {
                                   });
                                 }}
                               >
-                                <Text
-                                  fontFamily="Roboto"
-                                  fontSize={8}
-                                  fill="#FFF"
-                                >
-                                  Add
-                                </Text>
+                                <SVG src={done}></SVG>
                               </AutoLayout>
                             </AutoLayout>
                           ) : (
@@ -586,7 +599,7 @@ function Notepad() {
                         <AutoLayout key={i} direction="vertical" spacing={6}>
                           <AutoLayout direction="horizontal" spacing={6}>
                             <SVG
-                              src={expand}
+                              src={expand(colors[answer.category])}
                               onClick={() => {
                                 updateAnswers(answer.category, {
                                   expanded: !answer.expanded,
