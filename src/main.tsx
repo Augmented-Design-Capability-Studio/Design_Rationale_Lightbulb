@@ -53,6 +53,7 @@ const initAnswers = Object.keys(questions).map((c) => ({
   assignee: "",
   editEvidence: false,
   evidence: [],
+  hasKeyword: true,
 }));
 
 // const colors: { [category: string]: string } = {

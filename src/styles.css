@@ -37,6 +37,7 @@
   align-items: center;
   font-size: 13px;
   margin-bottom: 10px;
+  cursor: pointer;
 }
 
 .header {
@@ -97,4 +98,13 @@
 /* Change color of dropdown links on hover */
 .dropdown-content a:hover {
   background-color: #ddd;
+}
+
+.content {
+  font-size: 12;
+  margin-left: 20;
+  padding: 2px 8px;
+  color: rgb(75, 75, 75);
+  background-color: rgb(244, 244, 244);
+  border-radius: 5px;
 }

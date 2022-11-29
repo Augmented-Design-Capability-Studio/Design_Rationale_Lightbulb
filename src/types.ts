@@ -10,11 +10,12 @@ export interface Answer {
   question: string;
   answered: boolean;
   answer: string;
-  expanded: boolean;
+  expanded: boolean; // have different value in widget/sidebar
   editAssignee: boolean;
   assignee: string;
   editEvidence: boolean;
   evidence: Evidence[];
+  hasKeyword: boolean;
 }
 
 export interface LightbulbItem {

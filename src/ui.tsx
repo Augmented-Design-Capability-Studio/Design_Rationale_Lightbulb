@@ -37,10 +37,13 @@ function Plugin(props: { text: string }) {
   once("ARCHIVE", (newLightbulbList) => handleUpdateArchive(newLightbulbList));
   function handleUpdateArchive(newLightbulbList: LightbulbItem[]) {
     setLightbulbList(
-      newLightbulbList.sort((a, b) => b.lastEditTime.num - a.lastEditTime.num)
+      newLightbulbList
+        .sort((a, b) => b.lastEditTime.num - a.lastEditTime.num)
+        .map((d) => {
+          d.answers.forEach((ans) => (ans.expanded = false));
+          return d;
+        })
     );
-    // setFilteredObjects(lightbulbList);
-    console.log(newLightbulbList);
   }
 
   const handleFocusButtonClick = useCallback(
@@ -59,10 +62,39 @@ function Plugin(props: { text: string }) {
     emit("UPDATE_LIST", newList, widgetId);
   };
 
-  function handleSearchInput(newValue: string) {
+  const handleSearchInput = (newValue: string) => {
     console.log(newValue);
     setSearch(newValue);
-  }
+    if (newValue !== "") {
+      // expand all, filter with keyword
+      setLightbulbList(
+        lightbulbList.map((d) => {
+          d.answers.forEach((ans) => {
+            ans.expanded = true;
+            ans.hasKeyword = searchByKeyword(ans.answer, newValue);
+            return ans;
+          });
+          return d;
+        })
+      );
+    } else {
+      setLightbulbList(
+        lightbulbList.map((d) => {
+          d.answers.forEach((ans) => {
+            ans.expanded = false;
+            ans.hasKeyword = true;
+            return ans;
+          });
+          return d;
+        })
+      );
+    }
+  };
+
+  const searchByKeyword = (text: string, keyword: string) => {
+    let re = new RegExp(keyword, "i");
+    return re.test(text);
+  };
 
   const toggleHide = () => {
     emit<ToggleWidget>("TOGGLE_WIDGET", hide);
@@ -71,6 +103,7 @@ function Plugin(props: { text: string }) {
 
   const handleChangeTab = (tab: string) => {
     setTab(tab);
+    console.log(lightbulbList);
   };
 
   const handleChangeFilter = (
@@ -95,6 +128,14 @@ function Plugin(props: { text: string }) {
           lightbulbList.sort((a, b) => b.lastEditTime.num - a.lastEditTime.num)
         );
     }
+  };
+
+  const handleExpand = (index: number, ansIdx: number) => {
+    let newList = [...lightbulbList];
+    newList[index].answers[ansIdx].expanded =
+      !newList[index].answers[ansIdx].expanded;
+    console.log(newList);
+    setLightbulbList(newList);
   };
 
   return (
@@ -240,7 +281,8 @@ function Plugin(props: { text: string }) {
       <VerticalSpace space="small" />
       {lightbulbList.map((obj, index) =>
         obj.answers.filter(
-          (answer) => filter[answer.category] && answer.answered
+          (answer) =>
+            filter[answer.category] && answer.answered && answer.hasKeyword
         ).length ? (
           <div>
             <div class={styles["sidebar-container"]}>
@@ -286,15 +328,20 @@ function Plugin(props: { text: string }) {
                 </span>
               </div>
 
-              {obj.answers?.map((answer) =>
-                answer.answered && filter[answer.category] ? (
+              {obj.answers?.map((answer, ansIdx) =>
+                answer.answered &&
+                answer.hasKeyword &&
+                filter[answer.category] ? (
                   <div className={styles["answer-container"]}>
                     <div className={styles["answer-user"]}>
                       <span>
                         {obj.userName} {obj.lastEditTime.str}
                       </span>
                     </div>
-                    <div className={styles["category-row"]}>
+                    <div
+                      className={styles["category-row"]}
+                      onClick={() => handleExpand(index, ansIdx)}
+                    >
                       <svg
                         width="20"
                         height="20"
@@ -310,13 +357,18 @@ function Plugin(props: { text: string }) {
                           stroke="#27251F"
                         />
                       </svg>
-                      <span>
+                      <span style={{ cursor: "pointer" }}>
                         {tab == "Categories"
                           ? answer.category
                           : answer.question}
                       </span>
                     </div>
-                    {/* <span>{answer.answer}</span> */}
+                    <div
+                      className={styles["content"]}
+                      hidden={answer.expanded ? false : true}
+                    >
+                      <span>{answer.answer}</span>
+                    </div>
                     {/* <p>{answer.assignee}</p> */}
                     {/* <p>{answer.evidence}</p> */}
                   </div>
