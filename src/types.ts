@@ -25,6 +25,10 @@ export interface LightbulbItem {
   userName: string;
 }
 
+export interface Filter {
+  [category: string]: boolean;
+}
+
 export interface FocusHandler extends EventHandler {
   name: "UPDATE_FOCUS";
   handler: () => void;
