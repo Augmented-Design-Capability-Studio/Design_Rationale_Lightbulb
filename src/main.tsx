@@ -1,6 +1,7 @@
 /** @jsx figma.widget.h */
 
 import { once, showUI, emit, on } from "@create-figma-plugin/utilities";
+import _ from "lodash";
 import {
   expand,
   toexpand,
@@ -69,8 +70,7 @@ function createTime() {
   const month = date.getMonth() + 1;
   const year = date.getFullYear();
   const currentDate = `${day}-${month}-${year}`;
-  // console.log(currentDate);
-  return { num: date, str: currentDate };
+  return { num: Date.now(), str: currentDate };
 }
 
 function Lightbulb() {

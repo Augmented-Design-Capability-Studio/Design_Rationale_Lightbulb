@@ -21,7 +21,7 @@ export interface LightbulbItem {
   answers: Answer[];
   widgetId: string;
   parentNode: any;
-  lastEditTime: { num: Date; str: string };
+  lastEditTime: { num: number; str: string };
   userName: string;
 }
 

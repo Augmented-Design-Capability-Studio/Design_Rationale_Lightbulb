@@ -23,6 +23,8 @@ const initFilter: Filter = {
   Problems: true,
 };
 
+const sort: string[] = ["date", "unread", "author"];
+
 function Plugin(props: { text: string }) {
   const [lightbulbList, setLightbulbList] = useState<LightbulbItem[]>([]);
   const [search, setSearch] = useState<string>("");
@@ -30,10 +32,13 @@ function Plugin(props: { text: string }) {
   const [hide, setHide] = useState<boolean>(false);
   const [menu, setMenu] = useState<boolean>(false);
   const [filter, setFilter] = useState<Filter>(initFilter);
+  const [sortBy, setSortBy] = useState<string>("date");
 
   once("ARCHIVE", (newLightbulbList) => handleUpdateArchive(newLightbulbList));
   function handleUpdateArchive(newLightbulbList: LightbulbItem[]) {
-    setLightbulbList(newLightbulbList);
+    setLightbulbList(
+      newLightbulbList.sort((a, b) => b.lastEditTime.num - a.lastEditTime.num)
+    );
     // setFilteredObjects(lightbulbList);
     console.log(newLightbulbList);
   }
@@ -59,17 +64,10 @@ function Plugin(props: { text: string }) {
     setSearch(newValue);
   }
 
-  const toggleMenu = () => {};
-
   const toggleHide = () => {
     emit<ToggleWidget>("TOGGLE_WIDGET", hide);
     setHide(!hide);
   };
-
-  const options: Array<TabsOption> = [
-    { children: null, value: "Questions" },
-    { children: null, value: "Categories" },
-  ];
 
   const handleChangeTab = (tab: string) => {
     setTab(tab);
@@ -83,6 +81,20 @@ function Plugin(props: { text: string }) {
     let newFilter = { ...filter };
     newFilter[category] = newValue;
     setFilter(newFilter);
+  };
+
+  const handleChangeSortBy = (
+    event: JSX.TargetedEvent<HTMLInputElement>,
+    sortRule: string
+  ) => {
+    // if the current value is already checked, do nothing, else change the sort by rule
+    if (event.currentTarget.checked) {
+      setSortBy(sortRule);
+      if (sortRule == "date")
+        setLightbulbList(
+          lightbulbList.sort((a, b) => b.lastEditTime.num - a.lastEditTime.num)
+        );
+    }
   };
 
   return (
@@ -112,7 +124,7 @@ function Plugin(props: { text: string }) {
           />
           {/* <Button>Search</Button> */}
         </div>
-        <div onClick={toggleMenu} style={{ cursor: "pointer" }}>
+        <div style={{ cursor: "pointer" }}>
           <div className={styles["dropdown"]}>
             <svg
               onClick={() => setMenu(!menu)}
@@ -133,7 +145,21 @@ function Plugin(props: { text: string }) {
               className={styles["dropdown-content"]}
               style={{ display: menu ? "block" : "none" }}
             >
-              {Object.keys(colors).map((category) => (
+              {/* sort by */}
+              {sort.map((d) => (
+                <SelectableItem
+                  onChange={(event) => handleChangeSortBy(event, d)}
+                  value={sortBy == d}
+                >
+                  Sort by {d}
+                </SelectableItem>
+              ))}
+              <VerticalSpace space="extraSmall" />
+              <Divider />
+              <VerticalSpace space="extraSmall" />
+
+              {/* filter by category */}
+              {Object.keys(initFilter).map((category) => (
                 <SelectableItem
                   onChange={(event) => handleChangeFilter(event, category)}
                   value={filter[category]}
