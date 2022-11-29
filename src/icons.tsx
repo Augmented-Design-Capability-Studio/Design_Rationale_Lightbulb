@@ -19,6 +19,14 @@ export const circle = (
 ) => `<svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
 <circle cx="5" cy="5" r="4.5" fill="${color}" stroke="#27251F"/>
 </svg>`;
+export const colors: { [category: string]: string } = {
+  "Design Rationale": "#343448",
+  Function: "#FB6107",
+  Behavior: "#5C8001",
+  "Additional Context": "#F2B5D4",
+  Task: "#DFE2D7",
+  Problems: "#FFDD86",
+};
 
 export const done = `<svg width="35" height="13" viewBox="0 0 35 13" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect x="0.5" y="0.5" width="34" height="12" rx="1.5" fill="#FDB827" stroke="#27251F"/>

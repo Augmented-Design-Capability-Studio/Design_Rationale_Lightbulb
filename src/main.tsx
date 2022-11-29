@@ -1,8 +1,16 @@
 /** @jsx figma.widget.h */
 
 import { once, showUI, emit, on } from "@create-figma-plugin/utilities";
-import { expand, toexpand, expanded, bulbSvgSrc, circle, done } from "./icons";
-import { Answer, Evidence, LightbulbItem } from "./types";
+import {
+  expand,
+  toexpand,
+  expanded,
+  bulbSvgSrc,
+  circle,
+  done,
+  colors,
+} from "./icons";
+import { Answer, Evidence, LightbulbItem, ToggleWidget } from "./types";
 
 const { widget } = figma;
 const {
@@ -46,14 +54,14 @@ const initAnswers = Object.keys(questions).map((c) => ({
   evidence: [],
 }));
 
-const colors: { [category: string]: string } = {
-  "Design Rationale": "#343448",
-  Function: "#FB6107",
-  Behavior: "#5C8001",
-  "Additional Context": "#F2B5D4",
-  Task: "#DFE2D7",
-  Problems: "#FFDD86",
-};
+// const colors: { [category: string]: string } = {
+//   "Design Rationale": "#343448",
+//   Function: "#FB6107",
+//   Behavior: "#5C8001",
+//   "Additional Context": "#F2B5D4",
+//   Task: "#DFE2D7",
+//   Problems: "#FFDD86",
+// };
 
 function createTime() {
   const date = new Date();
@@ -62,7 +70,7 @@ function createTime() {
   const year = date.getFullYear();
   const currentDate = `${day}-${month}-${year}`;
   // console.log(currentDate);
-  return currentDate;
+  return { num: date, str: currentDate };
 }
 
 function Lightbulb() {
@@ -119,7 +127,8 @@ function Lightbulb() {
         id: figma.currentPage.selection[0].parent?.id,
         name: figma.currentPage.selection[0].parent?.name,
       },
-      lastEditTime: 1,
+      lastEditTime: date,
+      userName: name,
     };
     lightbulbList.push(newLightbulb);
     figma.currentPage.setPluginData(
@@ -166,6 +175,15 @@ function Lightbulb() {
             ? []
             : JSON.parse(figma.currentPage.getPluginData("lightbulbList"));
         emit("ARCHIVE", lightbulbList);
+
+        on<ToggleWidget>("TOGGLE_WIDGET", function (hide) {
+          const allWidgetNodes: any = figma.currentPage.findAll((node) => {
+            return node.type === "WIDGET" && node.widgetId == "lightbulb";
+          });
+          allWidgetNodes.forEach((widget: WidgetNode) => {
+            return (widget.visible = hide ? true : false);
+          });
+        });
       }
     });
   }
@@ -289,7 +307,7 @@ function Lightbulb() {
                             {name}
                           </Text>
                           <Text fontFamily="Inter" fontSize={8} fill="#818181">
-                            {date}
+                            {date.str}
                           </Text>
                         </AutoLayout>
                         <Input

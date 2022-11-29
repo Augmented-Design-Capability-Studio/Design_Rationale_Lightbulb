@@ -21,10 +21,16 @@ export interface LightbulbItem {
   answers: Answer[];
   widgetId: string;
   parentNode: any;
-  lastEditTime: number;
+  lastEditTime: { num: Date; str: string };
+  userName: string;
 }
 
 export interface FocusHandler extends EventHandler {
   name: "UPDATE_FOCUS";
   handler: () => void;
+}
+
+export interface ToggleWidget extends EventHandler {
+  name: "TOGGLE_WIDGET";
+  handler: (hide: boolean) => void;
 }
