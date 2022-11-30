@@ -106,7 +106,7 @@ function Lightbulb() {
 
   const updateAnswers = (category: string, newData: {}) => {
     // update the current widget answer
-    console.log("updateAnswers", newData);
+    console.log("updateAnswers", newData, answers);
     let newAnswers = answers;
     let index = newAnswers.findIndex((a) => a.category == category);
     newAnswers[index] = { ...answers[index], ...newData };

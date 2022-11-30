@@ -6,6 +6,7 @@ import {
   Textbox,
   TabsOption,
   SelectableItem,
+  Button,
 } from "@create-figma-plugin/ui";
 import { emit, EventHandler, once } from "@create-figma-plugin/utilities";
 import { h, JSX } from "preact";
@@ -36,6 +37,7 @@ function Plugin(props: { text: string }) {
 
   once("ARCHIVE", (newLightbulbList) => handleUpdateArchive(newLightbulbList));
   function handleUpdateArchive(newLightbulbList: LightbulbItem[]) {
+    console.log(newLightbulbList);
     setLightbulbList(
       newLightbulbList
         .sort((a, b) => b.lastEditTime.num - a.lastEditTime.num)
@@ -65,18 +67,28 @@ function Plugin(props: { text: string }) {
   const handleSearchInput = (newValue: string) => {
     console.log(newValue);
     setSearch(newValue);
+
+    let re = new RegExp(newValue, "i");
     if (newValue !== "") {
       // expand all, filter with keyword
-      setLightbulbList(
-        lightbulbList.map((d) => {
-          d.answers.forEach((ans) => {
-            ans.expanded = true;
-            ans.hasKeyword = searchByKeyword(ans.answer, newValue);
-            return ans;
-          });
-          return d;
-        })
-      );
+      const newList = lightbulbList.map((d, index) => {
+        d.answers.forEach((ans, ansIdx) => {
+          ans.expanded = true;
+          ans.hasKeyword = re.test(ans.answer);
+          // highlight keyword in answer
+          if (ans.hasKeyword) {
+            let ele: any = document.getElementById(`${index}-${ansIdx}`);
+            console.log(ele);
+            console.log(`${index}-${ansIdx}`);
+            ele.innerHTML = ans.answer?.replace(re, function (x) {
+              return `<b>${x}</b>`;
+            });
+          }
+          return ans;
+        });
+        return d;
+      });
+      setLightbulbList(newList);
     } else {
       setLightbulbList(
         lightbulbList.map((d) => {
@@ -88,12 +100,12 @@ function Plugin(props: { text: string }) {
           return d;
         })
       );
+      Array.from(document.getElementsByClassName("test")).forEach((e) => {
+        let [index, ansIdx]: number[] = e.id.split("-").map((d) => parseInt(d));
+        let answer: string = lightbulbList[index].answers[ansIdx].answer;
+        e.innerHTML = answer;
+      });
     }
-  };
-
-  const searchByKeyword = (text: string, keyword: string) => {
-    let re = new RegExp(keyword, "i");
-    return re.test(text);
   };
 
   const toggleHide = () => {
@@ -279,12 +291,22 @@ function Plugin(props: { text: string }) {
       <VerticalSpace space="small" />
       <Divider />
       <VerticalSpace space="small" />
-      {lightbulbList.map((obj, index) =>
-        obj.answers.filter(
-          (answer) =>
-            filter[answer.category] && answer.answered && answer.hasKeyword
-        ).length ? (
-          <div>
+      {lightbulbList.map(
+        (obj, index) => (
+          // obj.answers.filter(
+          //   (answer) =>
+          //     filter[answer.category] && answer.answered && answer.hasKeyword
+          // ).length ? (
+          <div
+            hidden={
+              obj.answers.filter(
+                (answer) =>
+                  filter[answer.category] &&
+                  answer.answered &&
+                  answer.hasKeyword
+              ).length == 0
+            }
+          >
             <div class={styles["sidebar-container"]}>
               <div
                 class={styles["parent-row"]}
@@ -328,11 +350,21 @@ function Plugin(props: { text: string }) {
                 </span>
               </div>
 
-              {obj.answers?.map((answer, ansIdx) =>
-                answer.answered &&
-                answer.hasKeyword &&
-                filter[answer.category] ? (
-                  <div className={styles["answer-container"]}>
+              {obj.answers?.map(
+                (answer, ansIdx) => (
+                  // answer.answered &&
+                  // answer.hasKeyword &&
+                  // filter[answer.category] ? (
+                  <div
+                    className={styles["answer-container"]}
+                    hidden={
+                      !(
+                        answer.answered &&
+                        answer.hasKeyword &&
+                        filter[answer.category]
+                      )
+                    }
+                  >
                     <div className={styles["answer-user"]}>
                       <span>
                         {obj.userName} {obj.lastEditTime.str}
@@ -367,18 +399,27 @@ function Plugin(props: { text: string }) {
                       className={styles["content"]}
                       hidden={answer.expanded ? false : true}
                     >
-                      <span>{answer.answer}</span>
+                      <span className="test" id={`${index}-${ansIdx}`}>
+                        {search == "" ? answer.answer : ""}
+                      </span>
                     </div>
                     {/* <p>{answer.assignee}</p> */}
                     {/* <p>{answer.evidence}</p> */}
                   </div>
-                ) : null
+                )
+                // ) : null
               )}
             </div>
             <Divider />
             <VerticalSpace space="small" />
+            <Button
+              onClick={() => handleDeleteButtonClick(index, obj.widgetId)}
+            >
+              Delete
+            </Button>
           </div>
-        ) : null
+        )
+        // ) : null
       )}
 
       <VerticalSpace space="small" />
