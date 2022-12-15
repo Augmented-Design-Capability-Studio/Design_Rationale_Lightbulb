@@ -7,6 +7,7 @@ import {
   toexpand,
   expanded,
   bulbSvgSrc,
+  bulbSvgNogbSrc,
   circle,
   done,
   colors,
@@ -55,15 +56,6 @@ const initAnswers = Object.keys(questions).map((c) => ({
   evidence: [],
   hasKeyword: true,
 }));
-
-// const colors: { [category: string]: string } = {
-//   "Design Rationale": "#343448",
-//   Function: "#FB6107",
-//   Behavior: "#5C8001",
-//   "Additional Context": "#F2B5D4",
-//   Task: "#DFE2D7",
-//   Problems: "#FFDD86",
-// };
 
 function createTime() {
   const date = new Date();
@@ -114,10 +106,13 @@ function Lightbulb() {
     console.log("newAnswers", newAnswers);
 
     // update the answers stored in figmaplugindata
+    // console.log(figma.currentPage.getSharedPluginData("name", "lightbulbList"));
     let lightbulbList: LightbulbItem[] =
-      figma.currentPage.getPluginData("lightbulbList") === "{}"
+      figma.currentPage.getSharedPluginData("name", "lightbulbList") === ""
         ? []
-        : JSON.parse(figma.currentPage.getPluginData("lightbulbList"));
+        : JSON.parse(
+            figma.currentPage.getSharedPluginData("name", "lightbulbList")
+          );
     console.log("widgetId", widgetId);
     if (lightbulbList.length)
       lightbulbList = lightbulbList.filter((lb) => lb.widgetId !== widgetId); // remove the previous data
@@ -130,9 +125,12 @@ function Lightbulb() {
       },
       lastEditTime: date,
       userName: name,
+      pageId: figma.currentPage.id,
+      pageName: figma.currentPage.name,
     };
     lightbulbList.push(newLightbulb);
-    figma.currentPage.setPluginData(
+    figma.currentPage.setSharedPluginData(
+      "name",
       "lightbulbList",
       JSON.stringify(lightbulbList)
     );
@@ -141,25 +139,26 @@ function Lightbulb() {
   const items: Array<WidgetPropertyMenuItem> = [
     {
       itemType: "action",
-      propertyName: "edit",
-      tooltip: "Edit",
+      propertyName: "sidebar",
+      tooltip: "View All",
     },
   ];
   async function onChange({
     propertyName,
   }: WidgetPropertyEvent): Promise<void> {
     await new Promise<void>(function (resolve: () => void): void {
-      if (propertyName === "edit") {
-        console.log("edit");
-        showUI({ height: 1200, width: 300, position: { x: 0, y: 0 } });
+      if (propertyName === "sidebar") {
+        console.log("sidebar");
+        showUI({ height: 1200, width: 300, position: { x: 800, y: 0 } });
 
-        on("UPDATE_FOCUS", function (id: string): void {
+        on("UPDATE_FOCUS", function (id: string, pageId: string): void {
           // console.log("UPDATE_FOCUS main", id);
-          handleFocus(id);
+          handleFocus(id, pageId);
           // resolve();
         });
         on("UPDATE_LIST", function (newList: LightbulbItem[], widgetId): void {
-          figma.currentPage.setPluginData(
+          figma.currentPage.setSharedPluginData(
+            "name",
             "lightbulbList",
             JSON.stringify(newList)
           );
@@ -171,17 +170,27 @@ function Lightbulb() {
           figma.currentPage.findOne((n) => n.id == widgetId)?.remove();
         });
 
-        let lightbulbList: LightbulbItem[] =
-          figma.currentPage.getPluginData("lightbulbList") === ""
-            ? []
-            : JSON.parse(figma.currentPage.getPluginData("lightbulbList"));
-        emit("ARCHIVE", lightbulbList);
+        let lightbulbList_allpages: LightbulbItem[] = [];
+        for (const page of figma.root.children) {
+          console.log(page.name);
+
+          let lightbulbList: LightbulbItem[] =
+            page.getSharedPluginData("name", "lightbulbList") === ""
+              ? []
+              : JSON.parse(page.getSharedPluginData("name", "lightbulbList"));
+          console.log(lightbulbList);
+          console.log("lightbulbList_allpages", lightbulbList_allpages);
+          lightbulbList_allpages = lightbulbList_allpages.concat(lightbulbList);
+        }
+
+        emit("ARCHIVE", lightbulbList_allpages);
 
         on<ToggleWidget>("TOGGLE_WIDGET", function (hide) {
           const allWidgetNodes: any = figma.currentPage.findAll((node) => {
             return node.type === "WIDGET" && node.widgetId == "lightbulb";
           });
           allWidgetNodes.forEach((widget: WidgetNode) => {
+            if (widget.locked) return;
             return (widget.visible = hide ? true : false);
           });
         });
@@ -190,7 +199,14 @@ function Lightbulb() {
   }
   usePropertyMenu(items, onChange);
 
-  const handleFocus = (id: string) => {
+  const handleFocus = (id: string, pageId: string) => {
+    console.log(
+      pageId,
+      figma.root.findChild((d) => d.id == pageId)
+    );
+    // if (figma.root.findChild((d) => d.id == pageId) !== null)
+    figma.currentPage = figma.root.findChild((d) => d.id == pageId);
+
     const selectionNode: Array<any> = [];
     selectionNode.push(figma.getNodeById(id));
     figma.currentPage.selection = selectionNode;
@@ -205,8 +221,12 @@ function Lightbulb() {
         padding={4}
         name="Widget"
         overflow="visible"
+        spacing={2}
       >
-        <SVG src={bulbSvgSrc} onClick={() => setOpen(!open)} />
+        <SVG
+          src={open ? bulbSvgSrc : bulbSvgNogbSrc}
+          onClick={() => setOpen(!open)}
+        />
 
         <AutoLayout
           direction="vertical"

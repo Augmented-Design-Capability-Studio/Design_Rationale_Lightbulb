@@ -49,8 +49,8 @@ function Plugin(props: { text: string }) {
   }
 
   const handleFocusButtonClick = useCallback(
-    function (id: string) {
-      emit("UPDATE_FOCUS", id);
+    function (id: string, pageId: string) {
+      emit("UPDATE_FOCUS", id, pageId);
     },
     [lightbulbList]
   );
@@ -310,7 +310,9 @@ function Plugin(props: { text: string }) {
             <div class={styles["sidebar-container"]}>
               <div
                 class={styles["parent-row"]}
-                onClick={() => handleFocusButtonClick(obj.parentNode.id)}
+                onClick={() =>
+                  handleFocusButtonClick(obj.parentNode.id, obj.pageId)
+                }
               >
                 <svg
                   width="30"
@@ -367,7 +369,7 @@ function Plugin(props: { text: string }) {
                   >
                     <div className={styles["answer-user"]}>
                       <span>
-                        {obj.userName} {obj.lastEditTime.str}
+                        {obj.userName} {obj.lastEditTime.str} | {obj.pageName}
                       </span>
                     </div>
                     <div
@@ -412,11 +414,11 @@ function Plugin(props: { text: string }) {
             </div>
             <Divider />
             <VerticalSpace space="small" />
-            <Button
+            {/* <Button
               onClick={() => handleDeleteButtonClick(index, obj.widgetId)}
             >
               Delete
-            </Button>
+            </Button> */}
           </div>
         )
         // ) : null

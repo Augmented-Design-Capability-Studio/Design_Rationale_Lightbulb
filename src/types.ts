@@ -24,6 +24,8 @@ export interface LightbulbItem {
   parentNode: any;
   lastEditTime: { num: number; str: string };
   userName: string;
+  pageId: string;
+  pageName: string;
 }
 
 export interface Filter {
