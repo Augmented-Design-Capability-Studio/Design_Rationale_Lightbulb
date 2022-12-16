@@ -24,7 +24,7 @@ const initFilter: Filter = {
   Problems: true,
 };
 
-const sort: string[] = ["date", "unread", "author"];
+const sort: string[] = ["date"]; // future work: could add more sorting rules
 
 function Plugin(props: { text: string }) {
   const [lightbulbList, setLightbulbList] = useState<LightbulbItem[]>([]);
