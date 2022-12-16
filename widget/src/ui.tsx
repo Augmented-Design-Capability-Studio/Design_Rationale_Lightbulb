@@ -347,9 +347,10 @@ function Plugin(props: { text: string }) {
                   />
                 </svg>
 
-                <span class={styles["parent-title"]}>
+                <span className={styles["parent-title"]}>
                   {obj.parentNode.name}
                 </span>
+                <span className={styles["pagename"]}>{obj.pageName}</span>
               </div>
 
               {obj.answers?.map(
@@ -369,7 +370,7 @@ function Plugin(props: { text: string }) {
                   >
                     <div className={styles["answer-user"]}>
                       <span>
-                        {obj.userName} {obj.lastEditTime.str} | {obj.pageName}
+                        {obj.userName} {obj.lastEditTime.str}
                       </span>
                     </div>
                     <div
