@@ -18,8 +18,8 @@
     "editorType": [
       "figma"
     ],
-    "id": "preact-sample",
-    "name": "Preact Sample",
+    "id": "lightbulb-switch",
+    "name": "Lightbulb Switch",
     "main": "src/main.ts",
     "ui": "src/ui.tsx"
   }
