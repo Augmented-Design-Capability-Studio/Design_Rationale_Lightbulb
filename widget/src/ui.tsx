@@ -74,13 +74,22 @@ function Plugin(props: { text: string }) {
       const newList = lightbulbList.map((d, index) => {
         d.answers.forEach((ans, ansIdx) => {
           ans.expanded = true;
-          ans.hasKeyword = re.test(ans.answer);
+          ans.hasKeyword = re.test(ans.answer) || re.test(ans.userName);
           // highlight keyword in answer
           if (ans.hasKeyword) {
+            // if answer has keyword
             let ele: any = document.getElementById(`${index}-${ansIdx}`);
-            console.log(ele);
-            console.log(`${index}-${ansIdx}`);
+            // console.log(ele);
+            // console.log(`${index}-${ansIdx}`);
             ele.innerHTML = ans.answer?.replace(re, function (x) {
+              return `<b>${x}</b>`;
+            });
+
+            // if author has keyword
+            let ele_user: any = document.getElementById(
+              `${index}-${ansIdx}-user`
+            );
+            ele_user.innerHTML = ans.userName.replace(re, function (x) {
               return `<b>${x}</b>`;
             });
           }
@@ -369,9 +378,10 @@ function Plugin(props: { text: string }) {
                     }
                   >
                     <div className={styles["answer-user"]}>
-                      <span>
-                        {obj.userName} {obj.lastEditTime.str}
+                      <span id={`${index}-${ansIdx}-user`}>
+                        {search == "" ? obj.userName : ""}
                       </span>
+                      <span>&nbsp;&nbsp;{obj.lastEditTime.str}</span>
                     </div>
                     <div
                       className={styles["category-row"]}

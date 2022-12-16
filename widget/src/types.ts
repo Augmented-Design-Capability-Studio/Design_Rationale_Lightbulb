@@ -8,6 +8,7 @@ export interface Evidence {
 export interface Answer {
   category: string;
   question: string;
+  userName: string;
   answered: boolean;
   answer: string;
   expanded: boolean; // have different value in widget/sidebar

@@ -47,6 +47,7 @@ const questions: { [category: string]: string } = {
 const initAnswers = Object.keys(questions).map((c) => ({
   category: c,
   question: questions[c],
+  userName: "",
   answered: false,
   answer: "",
   expanded: false,
@@ -101,7 +102,11 @@ function Lightbulb() {
     console.log("updateAnswers", newData, answers);
     let newAnswers = answers;
     let index = newAnswers.findIndex((a) => a.category == category);
-    newAnswers[index] = { ...answers[index], ...newData };
+    newAnswers[index] = {
+      ...answers[index],
+      ...newData,
+      ...{ userName: name },
+    };
     setAnswers(newAnswers);
     console.log("newAnswers", newAnswers);
 
