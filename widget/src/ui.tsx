@@ -163,7 +163,7 @@ function Plugin(props: { text: string }) {
     <Container space="extraSmall">
       <VerticalSpace space="small" />
       <div className={styles.header}>
-        <div class={styles.searchbar}>
+        <div className={styles.searchbar}>
           <svg
             width="24"
             height="14"

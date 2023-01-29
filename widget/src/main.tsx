@@ -209,13 +209,15 @@ function Lightbulb() {
       pageId,
       figma.root.findChild((d) => d.id == pageId)
     );
-    // if (figma.root.findChild((d) => d.id == pageId) !== null)
-    figma.currentPage = figma.root.findChild((d) => d.id == pageId);
+    const curPg = figma.root.findChild((d) => d.id == pageId);
+    if (curPg != null) {
+      figma.currentPage = curPg;
 
-    const selectionNode: Array<any> = [];
-    selectionNode.push(figma.getNodeById(id));
-    figma.currentPage.selection = selectionNode;
-    figma.viewport.scrollAndZoomIntoView(selectionNode);
+      const selectionNode: Array<any> = [];
+      selectionNode.push(figma.getNodeById(id));
+      figma.currentPage.selection = selectionNode;
+      figma.viewport.scrollAndZoomIntoView(selectionNode);
+    }
   };
 
   return (
