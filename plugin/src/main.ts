@@ -28,19 +28,19 @@ export default function () {
     }
   });
 
-  figma.on("documentchange", (event: any) => {
-    console.log(event);
-    for (const change of event.documentChanges) {
-      switch (change.type) {
-        case "DELETE":
-          console.log(
-            `Node ${change.id} deleted by a ${change.origin.toLowerCase()} user`
-          );
-          console.log(
-            figma.currentPage.getSharedPluginData("name", "lightbulbList")
-          );
-          break;
-      }
-    }
-  });
+  // figma.on("documentchange", (event: any) => {
+  //   console.log(event);
+  //   for (const change of event.documentChanges) {
+  //     switch (change.type) {
+  //       case "DELETE":
+  //         console.log(
+  //           `Node ${change.id} deleted by a ${change.origin.toLowerCase()} user`
+  //         );
+  //         console.log(
+  //           figma.currentPage.getSharedPluginData("name", "lightbulbList")
+  //         );
+  //         break;
+  //     }
+  //   }
+  // });
 }
