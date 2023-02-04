@@ -35,7 +35,7 @@ You will need an IDE to build this plugin/widget. We recommend using [Visual Stu
 
 6. Type `npm run build` and press enter. This will create a `/build` folder under `/widget` (or `/plugin`).
 
-## Installing it on Figma Desktop
+### Installing it on Figma Desktop
 
 7. Go to Figma Desktop and open a file. In the toolbar, select Widgets > Development > Import widget from Manifest... . (Select Plugins > Development > Import plugin from Manifest... when installing the plugin.)
 
