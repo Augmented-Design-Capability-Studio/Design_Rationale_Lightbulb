@@ -27,21 +27,21 @@ You will need an IDE to build this plugin/widget. We recommend using [Visual Stu
 
 ### Building it
 
-3. Open the terminal in your IDE, type `cd widget` or `cd plugin` and press enter. [Opening terminal in VS Code](https://code.visualstudio.com/docs/terminal/basics)
+3. Open the terminal in your IDE, type `cd widget` and press enter. To open terminal in Visual Studio Code, see [Opening terminal in VS Code](https://code.visualstudio.com/docs/terminal/basics).
 
-4. You should see `[~/.../Design_Rationale_Lightbulb/widget] (main) $ ` (or `[~/.../plugin]`) . Now type `npm install` and press enter.
+4. You should see `[~/.../Design_Rationale_Lightbulb/widget] (main) $ `. Now type `npm install` and press enter.
 
 5. The terminal will run for a bit, installing necessary packages. Wait for it to finish.
 
-6. Type `npm run build` and press enter. This will create a `/build` folder under `/widget` (or `/plugin`).
+6. Type `npm run build` and press enter. This will create a `/build` folder under `/widget`.
 
 ### Installing it on Figma Desktop
 
-7. Go to Figma Desktop and open a file. In the toolbar, select Widgets > Development > Import widget from Manifest... . (Select Plugins > Development > Import plugin from Manifest... when installing the plugin.)
+7. Go to Figma Desktop and open a file. In the toolbar, select Widgets > Development > Import widget from Manifest... .
 
-8. Select `manifest.json` in `Design_Rationale_Lightbulb/widget` or `Design_Rationale_Lightbulb/plugin`.
+8. Select `manifest.json` in `Design_Rationale_Lightbulb/widget`.
 
-9. Voila! You have successfully installed the widget or the plugin. To install another one, follow the same steps from step 3.
+9. Voila! You have successfully installed the widget. To install the plugin, follow the same steps from step 3 and replace widget with plugin in each step.
 
 ## Tutorial
 
@@ -62,3 +62,5 @@ You will need an IDE to build this plugin/widget. We recommend using [Visual Stu
 3. Select a frame that you want to attach the lightbulb to. Run the plugin by going to Plugins > Development > Lightbulb Switch.
 
 4. The plugin will make a copy of the lightbulb widget and attach it to the upper right corner of the frame.
+
+* The plugin might continue to show a message at the bottom of the screen. This is a known bug, but doesn't affect the functionality. Click cancel if needed.
